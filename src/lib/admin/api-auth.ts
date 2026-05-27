@@ -32,7 +32,7 @@ export async function requireAdminApi(
   if (user) return { user, renewed: false };
 
   const jti = req.cookies.get(REFRESH_COOKIE)?.value;
-  const rec = verifyRefreshToken(jti);
+  const rec = await verifyRefreshToken(jti);
   if (!rec) return unauthorized();
 
   touchRefreshToken(jti!);

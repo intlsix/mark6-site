@@ -12,7 +12,7 @@ import {
 
 export async function POST(req: NextRequest) {
   const jti = req.cookies.get(REFRESH_COOKIE)?.value;
-  const rec = verifyRefreshToken(jti);
+  const rec = await verifyRefreshToken(jti);
   if (!rec) {
     return NextResponse.json({ error: "Session expired" }, { status: 401 });
   }

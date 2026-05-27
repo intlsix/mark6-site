@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "crypto";
+import { createHash } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import fs from "fs";
 import path from "path";
@@ -13,7 +13,6 @@ const ACCESS_TTL_SEC = 8 * 60 * 60;
 const REFRESH_TTL_SEC = 7 * 24 * 60 * 60;
 export const IDLE_MS = 30 * 60 * 1000;
 
-const REFRESH_STORE = path.join(process.cwd(), "src/data/admin/refresh-tokens.json");
 const ADMINS_PATH = path.join(process.cwd(), "src/data/admin/admins.json");
 
 export type AdminRole = "super" | "editor";
@@ -35,25 +34,12 @@ export interface AccessPayload {
   lastAct: number;
 }
 
-interface RefreshRecord {
-  username: string;
+// Netlify Functions run on read-only filesystem, so refresh tokens
+// are self-contained JWTs instead of a server-side store.
+export interface RefreshPayload {
+  sub: string;
   role: AdminRole;
   exp: number;
-  lastAct: number;
-}
-
-function readRefreshStore(): Record<string, RefreshRecord> {
-  try {
-    return JSON.parse(fs.readFileSync(REFRESH_STORE, "utf8")) as Record<string, RefreshRecord>;
-  } catch {
-    return {};
-  }
-}
-
-function writeRefreshStore(store: Record<string, RefreshRecord>): void {
-  const dir = path.dirname(REFRESH_STORE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(REFRESH_STORE, JSON.stringify(store, null, 2) + "\n", "utf8");
 }
 
 export function hashPassword(password: string): string {
@@ -118,64 +104,42 @@ export async function verifyAccessToken(token: string | undefined): Promise<Acce
   }
 }
 
+// ── Refresh token: self-contained JWT (no filesystem writes) ──
+
 export function createRefreshToken(user: AdminUser): string {
-  const jti = randomUUID();
-  const now = Date.now();
-  const store = readRefreshStore();
-  store[jti] = {
-    username: user.username,
-    role: user.role,
-    exp: now + REFRESH_TTL_SEC * 1000,
-    lastAct: now,
-  };
-  const cutoff = now - REFRESH_TTL_SEC * 1000;
-  for (const [k, v] of Object.entries(store)) {
-    if (v.exp < cutoff) delete store[k];
-  }
-  writeRefreshStore(store);
-  return jti;
+  return new SignJWT({ role: user.role } as Record<string, unknown>)
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(user.username)
+    .setIssuedAt()
+    .setExpirationTime(`${REFRESH_TTL_SEC}s`)
+    .sign(SECRET);
 }
 
-export function verifyRefreshToken(jti: string | undefined): RefreshRecord | null {
+export async function verifyRefreshToken(jti: string | undefined): Promise<RefreshPayload | null> {
   if (!jti) return null;
-  const store = readRefreshStore();
-  const rec = store[jti];
-  if (!rec || rec.exp < Date.now()) {
-    if (rec) {
-      delete store[jti];
-      writeRefreshStore(store);
-    }
+  try {
+    const { payload } = await jwtVerify(jti, SECRET);
+    return {
+      sub: payload.sub as string,
+      role: payload.role as AdminRole,
+      exp: (payload.exp as number) ?? 0,
+    };
+  } catch {
     return null;
   }
-  if (Date.now() - rec.lastAct > IDLE_MS) {
-    delete store[jti];
-    writeRefreshStore(store);
-    return null;
-  }
-  return rec;
 }
 
-export function touchRefreshToken(jti: string): void {
-  const store = readRefreshStore();
-  const rec = store[jti];
-  if (rec) {
-    rec.lastAct = Date.now();
-    writeRefreshStore(store);
-  }
-}
+// No-op on Netlify (JWT is self-contained, no server-side store)
+export function touchRefreshToken(_jti: string): void {}
 
-export function revokeRefreshToken(jti: string | undefined): void {
-  if (!jti) return;
-  const store = readRefreshStore();
-  delete store[jti];
-  writeRefreshStore(store);
-}
+// No-op on Netlify (JWT expires naturally, no server-side store)
+export function revokeRefreshToken(_jti: string | undefined): void {}
 
-export function userFromRefresh(rec: RefreshRecord): AdminUser {
-  const admin = getAdmins().find((a) => a.username === rec.username);
+export function userFromRefresh(rec: RefreshPayload): AdminUser {
+  const admin = getAdmins().find((a) => a.username === rec.sub);
   return {
     id: admin?.id ?? "0",
-    username: rec.username,
+    username: rec.sub,
     role: rec.role,
   };
 }
