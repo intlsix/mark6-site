@@ -1,26 +1,22 @@
-import fs from "fs";
-import path from "path";
 import type { DrawRecord } from "@/lib/mark6/types";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 
-const DATA_PATH = path.join(process.cwd(), "src/data/hongkong/draws.json");
+const KEY = "hongkong/draws.json";
 
-function readRaw(): DrawRecord[] {
-  try {
-    const raw = fs.readFileSync(DATA_PATH, "utf8");
-    return JSON.parse(raw) as DrawRecord[];
-  } catch {
-    return [];
-  }
+function sortDraws(draws: DrawRecord[]): DrawRecord[] {
+  return [...draws].sort((a, b) => b.drawAt.localeCompare(a.drawAt));
 }
 
-export function getHongKongDraws(): DrawRecord[] {
-  return readRaw().sort((a, b) => b.drawAt.localeCompare(a.drawAt));
+export async function getHongKongDraws(): Promise<DrawRecord[]> {
+  const raw = await readJson<DrawRecord[]>(KEY, []);
+  return sortDraws(raw);
 }
 
-export function getHongKongDraw(id: string): DrawRecord | undefined {
-  return getHongKongDraws().find((d) => d.id === id);
+export async function getHongKongDraw(id: string): Promise<DrawRecord | undefined> {
+  const draws = await getHongKongDraws();
+  return draws.find((d) => d.id === id);
 }
 
-export function saveHongKongDraws(draws: DrawRecord[]): void {
-  try { fs.writeFileSync(DATA_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+export async function saveHongKongDraws(draws: DrawRecord[]): Promise<boolean> {
+  return writeJson(KEY, draws);
 }

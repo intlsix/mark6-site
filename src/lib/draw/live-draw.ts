@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 
 export interface LiveDrawState {
   numbers: (number | null)[];
@@ -8,7 +7,7 @@ export interface LiveDrawState {
   broadcasting: boolean;
 }
 
-const LIVE_PATH = path.join(process.cwd(), "src/data/international/live-draw.json");
+const KEY = "international/live-draw.json";
 
 const EMPTY: LiveDrawState = {
   numbers: [null, null, null, null, null, null],
@@ -17,21 +16,15 @@ const EMPTY: LiveDrawState = {
   broadcasting: false,
 };
 
-export function readLiveDraw(): LiveDrawState {
-  try {
-    return JSON.parse(fs.readFileSync(LIVE_PATH, "utf8"));
-  } catch {
-    return { ...EMPTY };
-  }
+export async function readLiveDraw(): Promise<LiveDrawState> {
+  return readJson<LiveDrawState>(KEY, { ...EMPTY });
 }
 
-export function writeLiveDraw(state: LiveDrawState): void {
-  const dir = path.dirname(LIVE_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+export async function writeLiveDraw(state: LiveDrawState): Promise<boolean> {
   state.updatedAt = new Date().toISOString();
-  try { fs.writeFileSync(LIVE_PATH, JSON.stringify(state, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+  return writeJson(KEY, state);
 }
 
-export function resetLiveDraw(): void {
-  writeLiveDraw({ ...EMPTY });
+export async function resetLiveDraw(): Promise<boolean> {
+  return writeLiveDraw({ ...EMPTY });
 }

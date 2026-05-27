@@ -1,6 +1,6 @@
 # ⚠️ Cursor 须知 — 项目状态清单
 
-> 最后更新：2026-05-27 — 数据就绪，后台持久化待解决
+> 最后更新：2026-05-27 — Netlify Blobs 持久化已接入
 
 ---
 
@@ -13,43 +13,29 @@
 - **双语+SEO**：简中/英语纯净化、每页独立 SEO
 - **部署**：intlsix.com（GoDaddy NS→Netlify）、git push 自动部署
 - **数据**：56 期香港开奖、147 期国际开奖
-- **18 处 writeFileSync**：全部包了 try-catch（Netlify 不崩）
+- **Netlify 持久化**：`@netlify/blobs` + `src/lib/storage/json-store.ts`（线上写 blob，本地写 `src/data/`）
+- **香港开奖日期**：`draws.json` 已按周二/四/六真实开奖日回溯修正（056 = 2026-05-26）
 
 ---
 
 ## 🚧 待办
 
-### 1. Netlify 后台数据持久化（重要）
+### 媒体上传（次要）
 
-**问题**：Netlify Functions 文件系统只读。后台所有写入操作（录入开奖、导入、保存文章、修改设置等）在线上静默失败——API 返回成功但不实际写入。本地 `npx next dev` 一切正常。
+Netlify 上 `public/uploads/` 仍不可写；后台媒体库元数据可存 blob，但**图片二进制上传**需后续改为 Blob 二进制或外部 CDN。
 
-**方案建议**：
-- 方案A：改用 **Netlify Blobs** 存储所有可变数据（draws, knowledge-base, settings 等）
-- 方案B：数据操作全在本地 → git push → Netlify 自动部署（当前临时方案）
-- 方案C：接一个外部数据库（Supabase/PlanetScale 免费层）
+### 首次部署后 blob 为空时
 
-**需要改的文件**：
-- 所有 `src/lib/draw/*.ts`（香港/国际开奖读写）
-- 所有 `src/lib/admin/*.ts`（articles, pages, seo, settings, analytics, backup, media, export, logs）
-- `src/app/api/admin/import/route.ts`
+线上读不到 git 里的 `src/data/*` 时，会从磁盘 fallback；后台第一次保存后写入 blob。如需把 git 数据种子进 blob，可在 Netlify 后台跑一次备份创建或写一次性迁移脚本。
 
-**要求**：选一个方案统一实现，改完本地 `npx tsc --noEmit` 确认编译通过、本地 `npx next dev` 测试写入正常再 push。
+---
 
-### 2. 开奖结果列表 — 日期修正
+## ✅ 已确认 — 国际 cron
 
-**问题**：56 期香港数据日期是按 3.5 天间隔估算的（2026-001 = 2025-11-15），不是真实日期。
-
-**文件**：`src/data/hongkong/draws.json`
-
-**要求**：把 drawAt 改成真实香港六合彩开奖日期（周二/四/六）。
-
-### 3. 国际开奖数据去重
-
-**问题**：明天 cron 自动生成 148 期会跟现有数据冲突。nextPeriod 已设 148。
-
-**文件**：`src/data/international/schedule-settings.json`
-
-**确认**：`nextPeriod` 是否为 "148"，`src/data/international/draws.json` 是否有 001-147。
+- `schedule-settings.json` → `nextPeriod: "148"`
+- `draws.json` → **147** 条，`2026-001` … `2026-147`
+- `runCronInternationalDraw`：当日已有记录则跳过；`nextIntlDrawId` 用 148 生成 `2026-148` 后把 `nextPeriod` 递增为 `149`
+- **明天 cron 不会与 147 重复**，将正常新增 148 期
 
 ---
 
@@ -68,10 +54,11 @@
 
 | 什么 | 在哪 |
 |------|------|
-| 文章内容 | `src/data/knowledge-base.json` |
+| 存储抽象 | `src/lib/storage/json-store.ts` |
+| 文章内容 | blob key `knowledge-base.json` / `src/data/knowledge-base.json` |
 | 翻译 | `messages/zh.json` `messages/en.json` |
-| SEO | `src/data/admin/seo.json` |
-| 香港数据 | `src/data/hongkong/draws.json` |
-| 国际数据 | `src/data/international/draws.json` |
-| 系统设置 | `src/data/admin/settings.json` |
-| 完整文档 | 桌面 `MARK6_SITE_FRAMEWORK_v6.md`（已删除，此文件替代） |
+| SEO | `admin/seo.json` |
+| 香港数据 | `hongkong/draws.json` |
+| 国际数据 | `international/draws.json` |
+| 系统设置 | `admin/settings.json` |
+| 期号设置 | `international/schedule-settings.json` |

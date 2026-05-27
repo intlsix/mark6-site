@@ -9,7 +9,7 @@ import AgeMethodGrid from "@/components/mark6/AgeMethodGrid";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return getSeoForPath("/zodiac", locale);
+  return await getSeoForPath("/zodiac", locale);
 }
 
 export default async function ZodiacPage({ params }: { params: Promise<{ locale: string }> }) {

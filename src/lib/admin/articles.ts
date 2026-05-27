@@ -1,37 +1,32 @@
-import fs from "fs";
-import path from "path";
 import type { KnowledgeArticle } from "@/lib/mark6/types";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 
-const DATA_PATH = path.join(process.cwd(), "src/data/knowledge-base.json");
+const KEY = "knowledge-base.json";
 
-export function getArticles(): KnowledgeArticle[] {
-  try {
-    return JSON.parse(fs.readFileSync(DATA_PATH, "utf8")) as KnowledgeArticle[];
-  } catch {
-    return [];
-  }
+export async function getArticles(): Promise<KnowledgeArticle[]> {
+  return readJson<KnowledgeArticle[]>(KEY, []);
 }
 
-export function getPublishedArticles(): KnowledgeArticle[] {
-  return getArticles().filter((a) => a.published);
+export async function getPublishedArticles(): Promise<KnowledgeArticle[]> {
+  const articles = await getArticles();
+  return articles.filter((a) => a.published);
 }
 
-export function saveArticles(articles: KnowledgeArticle[]): void {
-  try { fs.writeFileSync(DATA_PATH, JSON.stringify(articles, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+export async function saveArticles(articles: KnowledgeArticle[]): Promise<boolean> {
+  return writeJson(KEY, articles);
 }
 
-export function upsertArticle(article: KnowledgeArticle): void {
-  const all = getArticles();
+export async function upsertArticle(article: KnowledgeArticle): Promise<boolean> {
+  const all = await getArticles();
   const idx = all.findIndex((a) => a.id === article.id);
   if (idx >= 0) all[idx] = article;
   else all.push(article);
-  saveArticles(all);
+  return saveArticles(all);
 }
 
-export function deleteArticle(id: string): boolean {
-  const all = getArticles();
+export async function deleteArticle(id: string): Promise<boolean> {
+  const all = await getArticles();
   const next = all.filter((a) => a.id !== id);
   if (next.length === all.length) return false;
-  saveArticles(next);
-  return true;
+  return saveArticles(next);
 }

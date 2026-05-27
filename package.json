@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.7.8",
     "jose": "^6.2.3",
     "next": "14.2.28",
     "next-intl": "^3.26.5",
@@ -23,7 +24,6 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "14.2.28",
-    "netlify-cli": "^26.0.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"

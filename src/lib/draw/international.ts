@@ -1,78 +1,75 @@
-import fs from "fs";
-import path from "path";
 import type { DrawRecord } from "@/lib/mark6/types";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 import {
-  generateAutoDrawsInRange,
   shouldAutoDrawNow,
-  utcDrawTimeForDate,
   nextIntlDrawId,
   generateAutoDraw,
 } from "./international-auto";
 import { generateSeed, drawNumbersFromSeed, sha256 } from "@/lib/mark6/fairness";
 
-const DATA_PATH = path.join(process.cwd(), "src/data/international/draws.json");
+const KEY = "international/draws.json";
 
-function readManual(): DrawRecord[] {
-  try {
-    const raw = fs.readFileSync(DATA_PATH, "utf8");
-    return JSON.parse(raw) as DrawRecord[];
-  } catch {
-    return [];
-  }
+async function readManual(): Promise<DrawRecord[]> {
+  return readJson<DrawRecord[]>(KEY, []);
 }
 
-function writeManual(draws: DrawRecord[]): void {
-  try { fs.writeFileSync(DATA_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+async function writeManual(draws: DrawRecord[]): Promise<boolean> {
+  return writeJson(KEY, draws);
 }
 
-function mergeDraws(stored: DrawRecord[]): DrawRecord[] {
-  // 只返回已保存的记录，不再自动生成
-  // 自动生成仅由 cron 在 21:30 触发
-  return stored.sort((a, b) => b.drawAt.localeCompare(a.drawAt));
+function sortDraws(draws: DrawRecord[]): DrawRecord[] {
+  return [...draws].sort((a, b) => b.drawAt.localeCompare(a.drawAt));
 }
 
-export function getInternationalDraws(): DrawRecord[] {
-  return mergeDraws(readManual());
+export async function getInternationalDraws(): Promise<DrawRecord[]> {
+  return sortDraws(await readManual());
 }
 
-export function getInternationalDraw(id: string): DrawRecord | undefined {
-  return getInternationalDraws().find((d) => d.id === id);
+export async function getInternationalDraw(id: string): Promise<DrawRecord | undefined> {
+  const draws = await getInternationalDraws();
+  return draws.find((d) => d.id === id);
 }
 
-export function getManualInternationalDraws(): DrawRecord[] {
-  return readManual().sort((a, b) => b.drawAt.localeCompare(a.drawAt));
+export async function getManualInternationalDraws(): Promise<DrawRecord[]> {
+  return sortDraws(await readManual());
 }
 
-export function addManualInternationalDraw(draw: Omit<DrawRecord, "id"> & { id?: string }): DrawRecord {
-  const manual = readManual();
+export async function addManualInternationalDraw(
+  draw: Omit<DrawRecord, "id"> & { id?: string },
+): Promise<DrawRecord> {
+  const manual = await readManual();
+  const all = await getInternationalDraws();
   const record: DrawRecord = {
     ...draw,
-    id: draw.id ?? nextIntlDrawId([...manual, ...getInternationalDraws()], new Date()),
+    id: draw.id ?? (await nextIntlDrawId([...manual, ...all], new Date())),
     source: "manual",
   };
   manual.push(record);
-  writeManual(manual);
+  await writeManual(manual);
   return record;
 }
 
-export function updateManualInternationalDraw(id: string, patch: Partial<DrawRecord>): DrawRecord | null {
-  const manual = readManual();
+export async function updateManualInternationalDraw(
+  id: string,
+  patch: Partial<DrawRecord>,
+): Promise<DrawRecord | null> {
+  const manual = await readManual();
   const idx = manual.findIndex((d) => d.id === id);
   if (idx < 0) return null;
   manual[idx] = { ...manual[idx], ...patch, id };
-  writeManual(manual);
+  await writeManual(manual);
   return manual[idx];
 }
 
-export function deleteManualInternationalDraw(id: string): boolean {
-  const manual = readManual();
+export async function deleteManualInternationalDraw(id: string): Promise<boolean> {
+  const manual = await readManual();
   const next = manual.filter((d) => d.id !== id);
   if (next.length === manual.length) return false;
-  writeManual(next);
+  await writeManual(next);
   return true;
 }
 
-export function triggerManualDraw(): DrawRecord {
+export async function triggerManualDraw(): Promise<DrawRecord> {
   const seed = generateSeed();
   const { numbers, special } = drawNumbersFromSeed(seed);
   return addManualInternationalDraw({
@@ -85,19 +82,18 @@ export function triggerManualDraw(): DrawRecord {
   });
 }
 
-export function runCronInternationalDraw(): DrawRecord | null {
+export async function runCronInternationalDraw(): Promise<DrawRecord | null> {
   const now = new Date();
   if (!shouldAutoDrawNow(now)) return null;
-  const manual = readManual();
+  const manual = await readManual();
   const day = now.toISOString().slice(0, 10);
   if (manual.some((d) => d.drawAt.startsWith(day))) return null;
-  const draw = generateAutoDraw(manual, now);
+  const draw = await generateAutoDraw(manual, now);
   manual.push(draw);
-  writeManual(manual);
+  await writeManual(manual);
   return draw;
 }
 
-/** 清空所有国际开奖记录 */
-export function clearInternationalDraws(): void {
-  writeManual([]);
+export async function clearInternationalDraws(): Promise<boolean> {
+  return writeManual([]);
 }

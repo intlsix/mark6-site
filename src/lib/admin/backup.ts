@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
+import { readJson, writeJson, useBlobStorage } from "@/lib/storage/json-store";
 
 export interface BackupRecord {
   id: string;
@@ -10,7 +11,17 @@ export interface BackupRecord {
 }
 
 const BACKUP_DIR = path.join(process.cwd(), "src/data/admin/backups");
-const SETTINGS_PATH = path.join(process.cwd(), "src/data/admin/settings.json");
+const SETTINGS_KEY = "admin/settings.json";
+const BACKUP_PREFIX = "admin/backups/";
+
+const DATA_KEYS = [
+  "hongkong/draws.json",
+  "international/draws.json",
+  "knowledge-base.json",
+  "admin/pages.json",
+  "admin/seo.json",
+  "admin/settings.json",
+] as const;
 
 export interface SiteSettings {
   siteNameZh: string;
@@ -34,21 +45,16 @@ const DEFAULT_SETTINGS: SiteSettings = {
   hkScrapeEnabled: false,
 };
 
-export function getSettings(): SiteSettings {
-  try {
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf8")) };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
+export async function getSettings(): Promise<SiteSettings> {
+  const s = await readJson<Partial<SiteSettings>>(SETTINGS_KEY, {});
+  return { ...DEFAULT_SETTINGS, ...s };
 }
 
-export function saveSettings(s: SiteSettings): void {
-  const dir = path.dirname(SETTINGS_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  try { fs.writeFileSync(SETTINGS_PATH, JSON.stringify(s, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+export async function saveSettings(s: SiteSettings): Promise<boolean> {
+  return writeJson(SETTINGS_KEY, s);
 }
 
-function listBackups(): BackupRecord[] {
+async function listBackupsLocal(): Promise<BackupRecord[]> {
   if (!fs.existsSync(BACKUP_DIR)) return [];
   return fs
     .readdirSync(BACKUP_DIR)
@@ -66,31 +72,54 @@ function listBackups(): BackupRecord[] {
     .sort((a, b) => b.at.localeCompare(a.at));
 }
 
-export function getBackupList(): BackupRecord[] {
-  return listBackups();
+async function listBackupsBlob(): Promise<BackupRecord[]> {
+  try {
+    const { getStore } = await import("@netlify/blobs");
+    const store = getStore({ name: "mark6-data", consistency: "strong" });
+    const { blobs } = await store.list({ prefix: BACKUP_PREFIX });
+    return blobs
+      .map((b) => {
+        const filename = b.key.replace(BACKUP_PREFIX, "");
+        const id = filename.replace(".json", "");
+        return {
+          id,
+          filename,
+          sizeBytes: 0,
+          at: new Date().toISOString(),
+        };
+      })
+      .sort((a, b) => b.at.localeCompare(a.at));
+  } catch {
+    return [];
+  }
 }
 
-export function createBackup(): BackupRecord {
-  if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+export async function getBackupList(): Promise<BackupRecord[]> {
+  return useBlobStorage() ? listBackupsBlob() : listBackupsLocal();
+}
+
+async function gatherBundle(): Promise<Record<string, unknown>> {
+  const bundle: Record<string, unknown> = { createdAt: new Date().toISOString() };
+  for (const key of DATA_KEYS) {
+    bundle[key] = await readJson(key, null);
+  }
+  return bundle;
+}
+
+export async function createBackup(): Promise<BackupRecord> {
   const id = `backup_${new Date().toISOString().slice(0, 10).replace(/-/g, "")}_${randomUUID().slice(0, 6)}`;
   const filename = `${id}.json`;
-  const srcFiles = [
-    "src/data/hongkong/draws.json",
-    "src/data/international/draws.json",
-    "src/data/knowledge-base.json",
-    "src/data/admin/pages.json",
-    "src/data/admin/seo.json",
-    "src/data/admin/settings.json",
-  ];
-  const bundle: Record<string, unknown> = { createdAt: new Date().toISOString() };
-  for (const rel of srcFiles) {
-    const full = path.join(process.cwd(), rel);
-    if (fs.existsSync(full)) {
-      bundle[rel] = JSON.parse(fs.readFileSync(full, "utf8"));
-    }
-  }
+  const bundle = await gatherBundle();
   const content = JSON.stringify(bundle, null, 2);
-  try { fs.writeFileSync(path.join(BACKUP_DIR, filename), content, "utf8"); } catch { /* read-only FS */ }
+  const blobKey = `${BACKUP_PREFIX}${filename}`;
+
+  if (useBlobStorage()) {
+    await writeJson(blobKey, bundle);
+  } else {
+    if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    fs.writeFileSync(path.join(BACKUP_DIR, filename), content, "utf8");
+  }
+
   return {
     id,
     filename,
@@ -99,21 +128,31 @@ export function createBackup(): BackupRecord {
   };
 }
 
-export function restoreBackup(id: string): boolean {
-  const full = path.join(BACKUP_DIR, `${id}.json`);
-  if (!fs.existsSync(full)) return false;
-  const bundle = JSON.parse(fs.readFileSync(full, "utf8")) as Record<string, unknown>;
-  for (const [rel, data] of Object.entries(bundle)) {
-    if (rel === "createdAt" || typeof data !== "object") continue;
-    const target = path.join(process.cwd(), rel);
-    const dir = path.dirname(target);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    try { fs.writeFileSync(target, JSON.stringify(data, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+export async function restoreBackup(id: string): Promise<boolean> {
+  let bundle: Record<string, unknown>;
+  if (useBlobStorage()) {
+    bundle = await readJson(`${BACKUP_PREFIX}${id}.json`, {});
+    if (!bundle || Object.keys(bundle).length <= 1) return false;
+  } else {
+    const full = path.join(BACKUP_DIR, `${id}.json`);
+    if (!fs.existsSync(full)) return false;
+    bundle = JSON.parse(fs.readFileSync(full, "utf8")) as Record<string, unknown>;
+  }
+
+  for (const [key, data] of Object.entries(bundle)) {
+    if (key === "createdAt" || typeof data !== "object" || data === null) continue;
+    if (!(DATA_KEYS as readonly string[]).includes(key)) continue;
+    await writeJson(key, data);
   }
   return true;
 }
 
-export function readBackupFile(id: string): Buffer | null {
+export async function readBackupFile(id: string): Promise<Buffer | null> {
+  if (useBlobStorage()) {
+    const bundle = await readJson<Record<string, unknown>>(`${BACKUP_PREFIX}${id}.json`, {});
+    if (!bundle || Object.keys(bundle).length === 0) return null;
+    return Buffer.from(JSON.stringify(bundle, null, 2), "utf8");
+  }
   const full = path.join(BACKUP_DIR, `${id}.json`);
   if (!fs.existsSync(full)) return null;
   return fs.readFileSync(full);

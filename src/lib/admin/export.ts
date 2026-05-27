@@ -1,9 +1,8 @@
-import fs from "fs";
-import path from "path";
 import { randomUUID } from "crypto";
 import type { DrawRecord } from "@/lib/mark6/types";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 
-const HISTORY_PATH = path.join(process.cwd(), "src/data/admin/export-history.json");
+const KEY = "admin/export-history.json";
 
 export interface ExportRecord {
   id: string;
@@ -14,29 +13,15 @@ export interface ExportRecord {
   at: string;
 }
 
-function readHistory(): ExportRecord[] {
-  try {
-    return JSON.parse(fs.readFileSync(HISTORY_PATH, "utf8")) as ExportRecord[];
-  } catch {
-    return [];
-  }
+export async function getExportHistory(): Promise<ExportRecord[]> {
+  return readJson<ExportRecord[]>(KEY, []);
 }
 
-function writeHistory(records: ExportRecord[]): void {
-  const dir = path.dirname(HISTORY_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  try { fs.writeFileSync(HISTORY_PATH, JSON.stringify(records.slice(0, 50), null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
-}
-
-export function getExportHistory(): ExportRecord[] {
-  return readHistory();
-}
-
-export function recordExport(
+export async function recordExport(
   track: "hongkong" | "international",
   data: DrawRecord[],
-  year?: number
-): ExportRecord {
+  year?: number,
+): Promise<ExportRecord> {
   const json = JSON.stringify(data, null, 2);
   const filename = year
     ? `${track}_${year}.json`
@@ -49,16 +34,13 @@ export function recordExport(
     sizeBytes: Buffer.byteLength(json, "utf8"),
     at: new Date().toISOString(),
   };
-  const hist = readHistory();
+  const hist = await getExportHistory();
   hist.unshift(rec);
-  writeHistory(hist);
+  await writeJson(KEY, hist.slice(0, 50));
   return rec;
 }
 
-export function filterDraws(
-  draws: DrawRecord[],
-  opts: { year?: number; track?: string }
-): DrawRecord[] {
+export function filterDraws(draws: DrawRecord[], opts: { year?: number; track?: string }): DrawRecord[] {
   let out = draws;
   if (opts.year) {
     out = out.filter((d) => d.drawAt.startsWith(String(opts.year)));

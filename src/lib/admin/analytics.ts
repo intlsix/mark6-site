@@ -1,7 +1,6 @@
-import fs from "fs";
-import path from "path";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 
-const DATA_PATH = path.join(process.cwd(), "src/data/analytics.json");
+const KEY = "analytics.json";
 
 export interface PageView {
   path: string;
@@ -14,26 +13,21 @@ export interface AnalyticsData {
   pageViews: PageView[];
 }
 
-export function getAnalytics(): AnalyticsData {
-  try {
-    return JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
-  } catch {
-    return { pageViews: [] };
-  }
+export async function getAnalytics(): Promise<AnalyticsData> {
+  return readJson<AnalyticsData>(KEY, { pageViews: [] });
 }
 
-export function saveAnalytics(data: AnalyticsData): void {
-  try { fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+export async function saveAnalytics(data: AnalyticsData): Promise<boolean> {
+  return writeJson(KEY, data);
 }
 
-export function trackPageView(pv: PageView): void {
-  const data = getAnalytics();
+export async function trackPageView(pv: PageView): Promise<void> {
+  const data = await getAnalytics();
   data.pageViews.push(pv);
-  // Keep max 100K records to prevent file bloat
   if (data.pageViews.length > 100000) {
     data.pageViews = data.pageViews.slice(-50000);
   }
-  saveAnalytics(data);
+  await saveAnalytics(data);
 }
 
 export interface AnalyticsSummary {
@@ -46,12 +40,11 @@ export interface AnalyticsSummary {
   recentViews: PageView[];
 }
 
-export function getAnalyticsSummary(): AnalyticsSummary {
-  const data = getAnalytics();
+export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
+  const data = await getAnalytics();
   const views = data.pageViews;
   const totalViews = views.length;
 
-  // Daily views (last 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const dailyMap = new Map<string, number>();
@@ -65,7 +58,6 @@ export function getAnalyticsSummary(): AnalyticsSummary {
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  // Monthly views (last 12 months)
   const monthlyMap = new Map<string, number>();
   for (const v of views) {
     const month = v.timestamp.slice(0, 7);
@@ -76,7 +68,6 @@ export function getAnalyticsSummary(): AnalyticsSummary {
     .sort((a, b) => a.month.localeCompare(b.month))
     .slice(-12);
 
-  // Yearly views
   const yearlyMap = new Map<string, number>();
   for (const v of views) {
     const year = v.timestamp.slice(0, 4);
@@ -86,29 +77,34 @@ export function getAnalyticsSummary(): AnalyticsSummary {
     .map(([year, count]) => ({ year, count }))
     .sort((a, b) => a.year.localeCompare(b.year));
 
-  // Top countries
   const countryMap = new Map<string, number>();
   for (const v of views) {
     const c = v.country || "Unknown";
     countryMap.set(c, (countryMap.get(c) || 0) + 1);
   }
   const topCountries = Array.from(countryMap.entries())
-    .map(([country, count]) => ({ country, count, percentage: Math.round((count / totalViews) * 1000) / 10 }))
+    .map(([country, count]) => ({
+      country,
+      count,
+      percentage: totalViews ? Math.round((count / totalViews) * 1000) / 10 : 0,
+    }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 20);
 
-  // Top pages
   const pageMap = new Map<string, number>();
   for (const v of views) {
     const p = v.path || "/";
     pageMap.set(p, (pageMap.get(p) || 0) + 1);
   }
   const topPages = Array.from(pageMap.entries())
-    .map(([path, count]) => ({ path, count, percentage: Math.round((count / totalViews) * 1000) / 10 }))
+    .map(([path, count]) => ({
+      path,
+      count,
+      percentage: totalViews ? Math.round((count / totalViews) * 1000) / 10 : 0,
+    }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 20);
 
-  // Recent views
   const recentViews = views.slice(-20).reverse();
 
   return {

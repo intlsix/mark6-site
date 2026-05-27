@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   try {
-    return getSeoForPath("/results/hongkong", locale);
+    return await getSeoForPath("/results/hongkong", locale);
   } catch {
     return { title: "香港开奖结果 | Hong Kong Mark Six Results", description: "香港六合彩开奖号码查询" };
   }
@@ -17,7 +17,7 @@ export default async function HongKongListPage({ params }: { params: Promise<{ l
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("results");
-  const draws = getHongKongDraws();
+  const draws = await getHongKongDraws();
 
   return (
     <div>

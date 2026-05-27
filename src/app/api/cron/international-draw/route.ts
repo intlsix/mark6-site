@@ -8,9 +8,9 @@ export async function GET(req: NextRequest) {
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const draw = runCronInternationalDraw();
+  const draw = await runCronInternationalDraw();
   if (draw) {
-    appendLog("cron_intl", `Auto draw ${draw.id}`);
+    await appendLog("cron_intl", `Auto draw ${draw.id}`);
     return NextResponse.json({ ok: true, draw });
   }
   return NextResponse.json({ ok: true, skipped: true });

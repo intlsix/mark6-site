@@ -5,21 +5,14 @@ import { readScheduleSettings, writeScheduleSettings } from "./scheduled-draws";
 export const INTL_DRAW_HOUR_UTC = 13;
 export const INTL_DRAW_MINUTE_UTC = 30;
 
-/**
- * 生成期号：年号-期号，如 2026-001
- * - 如果 settings.nextPeriod 有值，用该值并自动递增
- * - 否则按年自动编号（每年从 001 开始）
- */
-export function nextIntlDrawId(existing: DrawRecord[], forDate: Date): string {
+export async function nextIntlDrawId(existing: DrawRecord[], forDate: Date): Promise<string> {
   const year = forDate.getFullYear();
-  const settings = readScheduleSettings();
+  const settings = await readScheduleSettings();
 
   if (settings.nextPeriod && settings.nextPeriod.trim()) {
-    // 手动模式：使用设置的期号
     let baseNum = parseInt(settings.nextPeriod.trim(), 10);
     if (isNaN(baseNum)) baseNum = 1;
 
-    // 确保不跟已有记录冲突
     const maxExisting = existing
       .filter((d) => d.id.startsWith(`${year}-`))
       .map((d) => {
@@ -29,14 +22,12 @@ export function nextIntlDrawId(existing: DrawRecord[], forDate: Date): string {
       .reduce((a, b) => Math.max(a, b), 0);
     baseNum = Math.max(baseNum, maxExisting + 1);
 
-    // 自动递增下一期
     const nextVal = String(baseNum + 1).padStart(3, "0");
-    try { writeScheduleSettings({ ...settings, nextPeriod: nextVal }); } catch { /* read-only FS */ }
+    await writeScheduleSettings({ ...settings, nextPeriod: nextVal });
 
     return `${year}-${String(baseNum).padStart(3, "0")}`;
   }
 
-  // 自动模式：按年编号
   const yearDraws = existing.filter((d) => d.id.startsWith(`${year}-`));
   const maxNum = yearDraws
     .map((d) => {
@@ -50,8 +41,9 @@ export function nextIntlDrawId(existing: DrawRecord[], forDate: Date): string {
 }
 
 export function utcDrawTimeForDate(date: Date): Date {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), INTL_DRAW_HOUR_UTC, INTL_DRAW_MINUTE_UTC, 0));
-  return d;
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), INTL_DRAW_HOUR_UTC, INTL_DRAW_MINUTE_UTC, 0),
+  );
 }
 
 export function shouldAutoDrawNow(now = new Date()): boolean {
@@ -59,12 +51,12 @@ export function shouldAutoDrawNow(now = new Date()): boolean {
   return now >= drawTime;
 }
 
-export function generateAutoDraw(existing: DrawRecord[], forDate = new Date()): DrawRecord {
+export async function generateAutoDraw(existing: DrawRecord[], forDate = new Date()): Promise<DrawRecord> {
   const seed = generateSeed();
   const { numbers, special } = drawNumbersFromSeed(seed);
   const drawAt = utcDrawTimeForDate(forDate).toISOString();
   return {
-    id: nextIntlDrawId(existing, forDate),
+    id: await nextIntlDrawId(existing, forDate),
     drawAt,
     numbers,
     special,
@@ -84,12 +76,11 @@ export function getPendingDraw(forDate = new Date()): Partial<DrawRecord> {
   };
 }
 
-/** Generate auto draws for each UTC day from start to end if missing */
-export function generateAutoDrawsInRange(
+export async function generateAutoDrawsInRange(
   existing: DrawRecord[],
   start: Date,
   end: Date,
-): DrawRecord[] {
+): Promise<DrawRecord[]> {
   const byDay = new Map<string, DrawRecord>();
   for (const d of existing) {
     const day = d.drawAt.slice(0, 10);
@@ -104,7 +95,7 @@ export function generateAutoDrawsInRange(
     const day = cur.toISOString().slice(0, 10);
     const drawTime = utcDrawTimeForDate(cur);
     if (drawTime <= end && !byDay.has(day)) {
-      const draw = generateAutoDraw(result, cur);
+      const draw = await generateAutoDraw(result, cur);
       result.push(draw);
       byDay.set(day, draw);
     }

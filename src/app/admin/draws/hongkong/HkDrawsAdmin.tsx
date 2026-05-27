@@ -9,10 +9,6 @@ export default function HkDrawsAdmin() {
   const [toast, setToast] = useState("");
   const [draws, setDraws] = useState<DrawRecord[]>([]);
 
-  // Scrape source config
-  const [scrapeUrl, setScrapeUrl] = useState("");
-  const [scrapeSaving, setScrapeSaving] = useState(false);
-
   // Add/Edit form
   const [editId, setEditId] = useState<string | null>(null);
   const [formId, setFormId] = useState("");
@@ -25,30 +21,7 @@ export default function HkDrawsAdmin() {
 
   useEffect(() => {
     refresh();
-    loadSettings();
   }, []);
-
-  async function loadSettings() {
-    try {
-      const s = await adminJson<Record<string, unknown>>("/api/admin/settings");
-      if (s && typeof s.hkScrapeUrl === "string") setScrapeUrl(s.hkScrapeUrl);
-    } catch { /* ignore */ }
-  }
-
-  async function saveScrapeUrl() {
-    setScrapeSaving(true);
-    try {
-      await adminJson("/api/admin/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hkScrapeUrl: scrapeUrl }),
-      });
-      setToast("采集源已更新");
-    } catch {
-      setToast("保存失败");
-    }
-    setScrapeSaving(false);
-  }
 
   async function refresh() {
     setDraws(await adminJson<DrawRecord[]>("/api/admin/hk-draws"));
@@ -146,32 +119,6 @@ export default function HkDrawsAdmin() {
   return (
     <div>
       <AdminToast msg={toast} type={toast.includes("已") ? "ok" : "err"} />
-
-      {/* 采集源配置 */}
-      <section className="rounded-lg border border-surface-border bg-surface-card p-5 mb-6">
-        <h2 className="text-lg text-gold font-bold mb-3">🔗 自动采集源</h2>
-        <p className="text-xs text-text-muted mb-3">香港开奖数据抓取地址。如采集页失效，更换新网址即可。手动录入功能作为备份保留。</p>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={scrapeUrl}
-            onChange={(e) => setScrapeUrl(e.target.value)}
-            placeholder="https://..."
-            className="flex-1 rounded border border-surface-border bg-surface px-3 py-2 text-sm text-text"
-          />
-          <button
-            type="button"
-            onClick={saveScrapeUrl}
-            disabled={scrapeSaving}
-            className="px-4 py-2 bg-gold text-surface rounded text-sm disabled:opacity-50"
-          >
-            {scrapeSaving ? "保存中..." : "保存"}
-          </button>
-        </div>
-        <p className="text-xs text-text-muted/50 mt-2">
-          采集时间：每周二、四、六 21:35（北京时间）· 当前采集源正常时无需修改
-        </p>
-      </section>
 
       {/* 录入/修改表单 */}
       <section className="rounded-lg border border-surface-border bg-surface-card p-5 mb-6">

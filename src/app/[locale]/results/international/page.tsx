@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return getSeoForPath("/results/international", locale);
+  return await getSeoForPath("/results/international", locale);
 }
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export default async function InternationalListPage({ params }: { params: Promis
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("results");
-  const draws = getInternationalDraws();
+  const draws = await getInternationalDraws();
 
   return (
     <div>

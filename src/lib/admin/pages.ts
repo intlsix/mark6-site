@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 
 export interface StaticPage {
   slug: string;
@@ -11,7 +10,7 @@ export interface StaticPage {
   updatedAt: string;
 }
 
-const DATA_PATH = path.join(process.cwd(), "src/data/admin/pages.json");
+const KEY = "admin/pages.json";
 
 const DEFAULT_PAGES: StaticPage[] = [
   { slug: "about", titleZh: "关于我们", titleEn: "About Us", contentZh: "香港国际六合彩致力于提供透明的开奖资讯。", contentEn: "Hong Kong International Mark Six provides transparent draw information.", published: true, updatedAt: new Date().toISOString() },
@@ -21,29 +20,25 @@ const DEFAULT_PAGES: StaticPage[] = [
   { slug: "contact", titleZh: "联系我们", titleEn: "Contact", contentZh: "如有疑问请联系客服。", contentEn: "Contact support for inquiries.", published: true, updatedAt: new Date().toISOString() },
 ];
 
-function ensure(): StaticPage[] {
-  const dir = path.dirname(DATA_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(DATA_PATH)) {
-    try { fs.writeFileSync(DATA_PATH, JSON.stringify(DEFAULT_PAGES, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+export async function getPages(): Promise<StaticPage[]> {
+  const pages = await readJson<StaticPage[]>(KEY, []);
+  if (pages.length === 0) {
+    await writeJson(KEY, DEFAULT_PAGES);
     return DEFAULT_PAGES;
   }
-  return JSON.parse(fs.readFileSync(DATA_PATH, "utf8")) as StaticPage[];
+  return pages;
 }
 
-export function getPages(): StaticPage[] {
-  return ensure();
+export async function getPage(slug: string): Promise<StaticPage | undefined> {
+  const pages = await getPages();
+  return pages.find((p) => p.slug === slug);
 }
 
-export function getPage(slug: string): StaticPage | undefined {
-  return getPages().find((p) => p.slug === slug);
-}
-
-export function upsertPage(page: StaticPage): void {
-  const all = getPages();
+export async function upsertPage(page: StaticPage): Promise<boolean> {
+  const all = await getPages();
   const idx = all.findIndex((p) => p.slug === page.slug);
   const next = { ...page, updatedAt: new Date().toISOString() };
   if (idx >= 0) all[idx] = next;
   else all.push(next);
-  try { fs.writeFileSync(DATA_PATH, JSON.stringify(all, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+  return writeJson(KEY, all);
 }

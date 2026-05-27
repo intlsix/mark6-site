@@ -21,14 +21,14 @@ export async function POST(req: NextRequest) {
     if (!username || !password) {
       return NextResponse.json({ error: "请输入用户名和密码" }, { status: 400 });
     }
-    const user = verifyCredentials(username, password);
+    const user = await verifyCredentials(username, password);
     if (!user) {
       return NextResponse.json({ error: "用户名或密码错误" }, { status: 401 });
     }
 
     const access = await signAccessToken(user);
     const refresh = await createRefreshToken(user);
-    appendLog("login", `${user.username} 登录`, req.headers.get("x-forwarded-for") ?? undefined);
+    await appendLog("login", `${user.username} 登录`, req.headers.get("x-forwarded-for") ?? undefined);
 
     const res = NextResponse.json({
       ok: true,
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     console.error("Login error:", err);
     return NextResponse.json(
       { error: `服务器错误: ${(err as Error).message}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

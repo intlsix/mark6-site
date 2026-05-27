@@ -6,14 +6,14 @@ import type { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return getSeoForPath("/knowledge", locale);
+  return await getSeoForPath("/knowledge", locale);
 }
 
 export default async function KnowledgePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("knowledge");
-  const articles = getPublishedArticles();
+  const articles = await getPublishedArticles();
 
   return (
     <div>

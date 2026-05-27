@@ -11,10 +11,7 @@ const NAV = [
   { key: "trends", href: "/trends" },
   { key: "zodiac", href: "/zodiac" },
   { key: "rules", href: "/rules" },
-  { key: "glossary", href: "/glossary" },
   { key: "knowledge", href: "/knowledge" },
-  { key: "faq", href: "/faq" },
-  { key: "about", href: "/about" },
 ] as const;
 
 export default function Header() {

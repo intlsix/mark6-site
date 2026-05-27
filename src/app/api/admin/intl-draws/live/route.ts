@@ -6,7 +6,7 @@ import { appendLog } from "@/lib/admin/logs";
 
 export async function GET(req: NextRequest) {
   return withAdminAuth(req, async () => {
-    const state = readLiveDraw();
+    const state = await readLiveDraw();
     return NextResponse.json(state);
   });
 }
@@ -19,33 +19,31 @@ export async function POST(req: NextRequest) {
       special?: number | null;
     };
     if (body.action === "reset") {
-      resetLiveDraw();
+      await resetLiveDraw();
       return NextResponse.json({ ok: true });
     }
     if (body.action === "set") {
-      const state = readLiveDraw();
+      const state = await readLiveDraw();
       if (body.numbers !== undefined) state.numbers = body.numbers;
       if (body.special !== undefined) state.special = body.special;
       state.broadcasting = true;
-      writeLiveDraw(state);
+      await writeLiveDraw(state);
       return NextResponse.json(state);
     }
     if (body.action === "publish") {
-      const state = readLiveDraw();
+      const state = await readLiveDraw();
       const validNums = state.numbers.filter((n): n is number => n !== null);
       if (validNums.length === 0 || state.special === null) {
         return NextResponse.json({ error: "号码不完整" }, { status: 400 });
       }
-      // Save as a new draw record
-      const draw = addManualInternationalDraw({
+      const draw = await addManualInternationalDraw({
         drawAt: new Date().toISOString(),
         numbers: validNums,
         special: state.special,
         source: "manual",
       });
-      appendLog("intl_live_publish", `${user.username} 现场开奖发布 ${draw.id}`);
-      // Reset live state
-      resetLiveDraw();
+      await appendLog("intl_live_publish", `${user.username} 现场开奖发布 ${draw.id}`);
+      await resetLiveDraw();
       return NextResponse.json({ ok: true, draw });
     }
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

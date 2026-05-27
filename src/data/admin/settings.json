@@ -5,6 +5,5 @@
   "jurisdiction": "马恩岛",
   "regNumber": "IMO-128456",
   "contactEmail": "support@example.com",
-  "autoBackupEnabled": false,
-  "hkScrapeUrl": "https://tbjl.sxhwqc.com:2025/hk.html"
+  "autoBackupEnabled": false
 }

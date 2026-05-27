@@ -45,10 +45,6 @@ export default function SettingsPanel() {
         <input type="checkbox" checked={s.autoBackupEnabled} onChange={(e) => set("autoBackupEnabled", e.target.checked)} />
         启用自动备份（每天 03:00 UTC）
       </label>
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={s.hkScrapeEnabled} onChange={(e) => set("hkScrapeEnabled", e.target.checked)} />
-        启用香港自动采集（需配置数据源）
-      </label>
       <button type="button" onClick={save} className="px-4 py-2 bg-gold text-surface rounded text-sm">保存</button>
     </div>
   );

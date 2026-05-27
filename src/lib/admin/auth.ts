@@ -1,19 +1,18 @@
 import { createHash } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
-import fs from "fs";
-import path from "path";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 
 export const ACCESS_COOKIE = "mark6_access";
 export const REFRESH_COOKIE = "mark6_refresh";
 
 const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "mark6-dev-secret-change-in-production"
+  process.env.JWT_SECRET ?? "mark6-dev-secret-change-in-production",
 );
 const ACCESS_TTL_SEC = 8 * 60 * 60;
 const REFRESH_TTL_SEC = 7 * 24 * 60 * 60;
 export const IDLE_MS = 30 * 60 * 1000;
 
-const ADMINS_PATH = path.join(process.cwd(), "src/data/admin/admins.json");
+const ADMINS_KEY = "admin/admins.json";
 
 export type AdminRole = "super" | "editor";
 
@@ -34,8 +33,6 @@ export interface AccessPayload {
   lastAct: number;
 }
 
-// Netlify Functions run on read-only filesystem, so refresh tokens
-// are self-contained JWTs instead of a server-side store.
 export interface RefreshPayload {
   sub: string;
   role: AdminRole;
@@ -46,35 +43,31 @@ export function hashPassword(password: string): string {
   return createHash("sha256").update(password).digest("hex");
 }
 
-function ensureAdminsFile(): AdminRecord[] {
-  const dir = path.dirname(ADMINS_PATH);
-  try { if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); } catch { /* read-only FS */ }
-  if (!fs.existsSync(ADMINS_PATH)) {
-    const defaultAdmins: AdminRecord[] = [
-      {
-        id: "1",
-        username: "admin",
-        passwordHash: hashPassword(process.env.ADMIN_PASSWORD ?? "changeme"),
-        role: "super",
-        createdAt: new Date().toISOString(),
-      },
-    ];
-    try { fs.writeFileSync(ADMINS_PATH, JSON.stringify(defaultAdmins, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
-    return defaultAdmins;
+const DEFAULT_ADMINS: AdminRecord[] = [
+  {
+    id: "1",
+    username: "admin",
+    passwordHash: hashPassword(process.env.ADMIN_PASSWORD ?? "changeme"),
+    role: "super",
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export async function getAdmins(): Promise<AdminRecord[]> {
+  const admins = await readJson<AdminRecord[]>(ADMINS_KEY, []);
+  if (admins.length === 0) {
+    await writeJson(ADMINS_KEY, DEFAULT_ADMINS);
+    return DEFAULT_ADMINS;
   }
-  return JSON.parse(fs.readFileSync(ADMINS_PATH, "utf8")) as AdminRecord[];
+  return admins;
 }
 
-export function saveAdmins(admins: AdminRecord[]): void {
-  try { fs.writeFileSync(ADMINS_PATH, JSON.stringify(admins, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+export async function saveAdmins(admins: AdminRecord[]): Promise<boolean> {
+  return writeJson(ADMINS_KEY, admins);
 }
 
-export function getAdmins(): AdminRecord[] {
-  return ensureAdminsFile();
-}
-
-export function verifyCredentials(username: string, password: string): AdminUser | null {
-  const admin = getAdmins().find((a) => a.username === username);
+export async function verifyCredentials(username: string, password: string): Promise<AdminUser | null> {
+  const admin = (await getAdmins()).find((a) => a.username === username);
   if (!admin || admin.passwordHash !== hashPassword(password)) return null;
   return { id: admin.id, username: admin.username, role: admin.role };
 }
@@ -104,10 +97,8 @@ export async function verifyAccessToken(token: string | undefined): Promise<Acce
   }
 }
 
-// ── Refresh token: self-contained JWT (no filesystem writes) ──
-
-export async function createRefreshToken(user: AdminUser): Promise<string> {
-  return await new SignJWT({ role: user.role } as Record<string, unknown>)
+export async function signRefreshToken(user: AdminUser): Promise<string> {
+  return new SignJWT({ role: user.role })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.username)
     .setIssuedAt()
@@ -115,10 +106,10 @@ export async function createRefreshToken(user: AdminUser): Promise<string> {
     .sign(SECRET);
 }
 
-export async function verifyRefreshToken(jti: string | undefined): Promise<RefreshPayload | null> {
-  if (!jti) return null;
+export async function verifyRefreshToken(token: string | undefined): Promise<RefreshPayload | null> {
+  if (!token) return null;
   try {
-    const { payload } = await jwtVerify(jti, SECRET);
+    const { payload } = await jwtVerify(token, SECRET);
     return {
       sub: payload.sub as string,
       role: payload.role as AdminRole,
@@ -129,32 +120,33 @@ export async function verifyRefreshToken(jti: string | undefined): Promise<Refre
   }
 }
 
-// No-op on Netlify (JWT is self-contained, no server-side store)
-export function touchRefreshToken(_jti: string): void {}
-
-// No-op on Netlify (JWT expires naturally, no server-side store)
-export function revokeRefreshToken(_jti: string | undefined): void {}
-
-export function userFromRefresh(rec: RefreshPayload): AdminUser {
-  const admin = getAdmins().find((a) => a.username === rec.sub);
-  return {
-    id: admin?.id ?? "0",
-    username: rec.sub,
-    role: rec.role,
-  };
-}
-
 export const cookieOptions = {
   httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
-  secure: process.env.NODE_ENV === "production",
 };
 
-export function accessCookieMaxAge() {
+export function accessCookieMaxAge(): number {
   return ACCESS_TTL_SEC;
 }
 
-export function refreshCookieMaxAge() {
+export function refreshCookieMaxAge(): number {
   return REFRESH_TTL_SEC;
+}
+
+export async function createRefreshToken(user: AdminUser): Promise<string> {
+  return signRefreshToken(user);
+}
+
+export function userFromRefresh(rec: RefreshPayload): AdminUser {
+  return { id: "0", username: rec.sub, role: rec.role };
+}
+
+export function touchRefreshToken(_token: string): void {
+  /* self-contained JWT — no server-side store */
+}
+
+export async function revokeRefreshToken(_token: string): Promise<void> {
+  /* self-contained JWT — no server store */
 }

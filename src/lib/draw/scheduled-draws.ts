@@ -1,57 +1,40 @@
-import fs from "fs";
-import path from "path";
+import { readJson, writeJson } from "@/lib/storage/json-store";
 
 export interface ScheduledDraw {
-  date: string; // YYYY-MM-DD
-  numbers: (number | null)[]; // 6 items
+  date: string;
+  numbers: (number | null)[];
   special: number | null;
 }
 
 export interface ScheduleSettings {
-  /** 下一期开奖的期号，如 001、056。为空则自动按日期生成 */
   nextPeriod?: string;
 }
 
-const SCHED_PATH = path.join(process.cwd(), "src/data/international/scheduled-draws.json");
-const SETTINGS_PATH = path.join(process.cwd(), "src/data/international/schedule-settings.json");
+const SCHED_KEY = "international/scheduled-draws.json";
+const SETTINGS_KEY = "international/schedule-settings.json";
 
-function ensureDir() {
-  const dir = path.dirname(SCHED_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+export async function readScheduledDraws(): Promise<ScheduledDraw[]> {
+  return readJson<ScheduledDraw[]>(SCHED_KEY, []);
 }
 
-export function readScheduledDraws(): ScheduledDraw[] {
-  try {
-    return JSON.parse(fs.readFileSync(SCHED_PATH, "utf8"));
-  } catch {
-    return [];
-  }
+export async function writeScheduledDraws(draws: ScheduledDraw[]): Promise<boolean> {
+  return writeJson(SCHED_KEY, draws);
 }
 
-export function writeScheduledDraws(draws: ScheduledDraw[]): void {
-  ensureDir();
-  try { fs.writeFileSync(SCHED_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
+export async function readScheduleSettings(): Promise<ScheduleSettings> {
+  return readJson<ScheduleSettings>(SETTINGS_KEY, { nextPeriod: "" });
 }
 
-export function readScheduleSettings(): ScheduleSettings {
-  try {
-    return JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf8"));
-  } catch {
-    return { nextPeriod: "" };
-  }
+export async function writeScheduleSettings(s: ScheduleSettings): Promise<boolean> {
+  return writeJson(SETTINGS_KEY, s);
 }
 
-export function writeScheduleSettings(s: ScheduleSettings): void {
-  ensureDir();
-  try { fs.writeFileSync(SETTINGS_PATH, JSON.stringify(s, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
-}
-
-export function getTodaysScheduledDraw(): ScheduledDraw | null {
+export async function getTodaysScheduledDraw(): Promise<ScheduledDraw | null> {
   const today = new Date();
   const y = today.getFullYear();
   const m = String(today.getMonth() + 1).padStart(2, "0");
   const d = String(today.getDate()).padStart(2, "0");
   const dateStr = `${y}-${m}-${d}`;
-  const draws = readScheduledDraws();
+  const draws = await readScheduledDraws();
   return draws.find((sd) => sd.date === dateStr) ?? null;
 }

@@ -10,12 +10,12 @@ export async function GET(req: NextRequest) {
     const track = req.nextUrl.searchParams.get("track") as "hongkong" | "international" | null;
     const year = req.nextUrl.searchParams.get("year");
     if (!track) {
-      return NextResponse.json({ history: getExportHistory() });
+      return NextResponse.json({ history: await getExportHistory() });
     }
     const draws =
-      track === "hongkong" ? getHongKongDraws() : getInternationalDraws();
+      track === "hongkong" ? await getHongKongDraws() : await getInternationalDraws();
     const filtered = filterDraws(draws, { year: year ? parseInt(year, 10) : undefined });
-    const rec = recordExport(track, filtered, year ? parseInt(year, 10) : undefined);
+    const rec = await recordExport(track, filtered, year ? parseInt(year, 10) : undefined);
     return new NextResponse(JSON.stringify(filtered, null, 2), {
       headers: {
         "Content-Type": "application/json",
@@ -31,10 +31,10 @@ export async function POST(req: NextRequest) {
       track: "hongkong" | "international";
       year?: number;
     };
-    const draws = track === "hongkong" ? getHongKongDraws() : getInternationalDraws();
+    const draws = track === "hongkong" ? await getHongKongDraws() : await getInternationalDraws();
     const filtered = filterDraws(draws, { year });
-    const rec = recordExport(track, filtered, year);
-    appendLog("export", `${user.username} 导出 ${rec.filename}`);
+    const rec = await recordExport(track, filtered, year);
+    await appendLog("export", `${user.username} 导出 ${rec.filename}`);
     return NextResponse.json({ ok: true, record: rec, count: filtered.length });
   });
 }

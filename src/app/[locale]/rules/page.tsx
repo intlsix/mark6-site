@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return getSeoForPath("/rules", locale);
+  return await getSeoForPath("/rules", locale);
 }
 
 export default async function RulesHubPage({ params }: { params: Promise<{ locale: string }> }) {

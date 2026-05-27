@@ -12,8 +12,8 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; id: string }> }): Promise<Metadata> {
   const { locale, id } = await params;
-  const draw = getInternationalDraw(id);
-  if (!draw) return getSeoForPath("/results/international", locale);
+  const draw = await getInternationalDraw(id);
+  if (!draw) return await getSeoForPath("/results/international", locale);
   return {
     title: `${draw.id} | ${locale === "zh" ? "国际开奖" : "Intl Draw"}`,
     description: `${draw.numbers.join(" ")} + ${draw.special} — ${locale === "zh" ? "国际六合彩开奖详情" : "International Mark Six draw details"}`,
@@ -30,7 +30,7 @@ export default async function InternationalDetailPage({
   const t = await getTranslations("results");
   const tCommon = await getTranslations("common");
   const tNav = await getTranslations("nav");
-  const draw = getInternationalDraw(id);
+  const draw = await getInternationalDraw(id);
   if (!draw) notFound();
   const year = new Date(draw.drawAt).getFullYear();
   const verified = draw.seed && draw.seedHash ? verifySeed(draw.seed, draw.seedHash) : null;

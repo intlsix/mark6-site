@@ -5,7 +5,6 @@ import { routing } from "@/i18n/routing";
 import Header from "@/components/layout/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import LegalNotice from "@/components/layout/LegalNotice";
-import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -27,8 +26,7 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className="min-h-screen flex flex-col">
         <NextIntlClientProvider messages={messages}>
-          <AnalyticsTracker />
-            <Header />
+          <Header />
           <div className="flex-1 mx-auto w-full max-w-6xl px-4 py-8">
             {children}
             <div className="mt-12">

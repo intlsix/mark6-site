@@ -3,8 +3,8 @@ import { getAdmins, saveAdmins, hashPassword, type AdminRecord, type AdminRole }
 export { getAdmins, saveAdmins, hashPassword };
 export type { AdminRecord, AdminRole };
 
-export function addAdmin(username: string, password: string, role: AdminRole): AdminRecord | null {
-  const all = getAdmins();
+export async function addAdmin(username: string, password: string, role: AdminRole): Promise<AdminRecord | null> {
+  const all = await getAdmins();
   if (all.some((a) => a.username === username)) return null;
   const rec: AdminRecord = {
     id: String(Date.now()),
@@ -14,24 +14,22 @@ export function addAdmin(username: string, password: string, role: AdminRole): A
     createdAt: new Date().toISOString(),
   };
   all.push(rec);
-  saveAdmins(all);
+  await saveAdmins(all);
   return rec;
 }
 
-export function updateAdminPassword(username: string, password: string): boolean {
-  const all = getAdmins();
+export async function updateAdminPassword(username: string, password: string): Promise<boolean> {
+  const all = await getAdmins();
   const idx = all.findIndex((a) => a.username === username);
   if (idx < 0) return false;
   all[idx].passwordHash = hashPassword(password);
-  saveAdmins(all);
-  return true;
+  return saveAdmins(all);
 }
 
-export function deleteAdmin(username: string): boolean {
-  const all = getAdmins();
+export async function deleteAdmin(username: string): Promise<boolean> {
+  const all = await getAdmins();
   if (all.length <= 1) return false;
   const next = all.filter((a) => a.username !== username);
   if (next.length === all.length) return false;
-  saveAdmins(next);
-  return true;
+  return saveAdmins(next);
 }

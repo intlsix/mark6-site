@@ -9,8 +9,8 @@ import type { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; id: string }> }): Promise<Metadata> {
   const { locale, id } = await params;
-  const draw = getHongKongDraw(id);
-  if (!draw) return getSeoForPath("/results/hongkong", locale);
+  const draw = await getHongKongDraw(id);
+  if (!draw) return await getSeoForPath("/results/hongkong", locale);
   return {
     title: `${draw.id} | ${locale === "zh" ? "香港开奖" : "HK Draw"}`,
     description: `${draw.numbers.join(" ")} + ${draw.special} — ${locale === "zh" ? "香港六合彩开奖详情" : "Hong Kong Mark Six draw details"}`,
@@ -27,7 +27,7 @@ export default async function HongKongDetailPage({
   const t = await getTranslations("results");
   const tCommon = await getTranslations("common");
   const tNav = await getTranslations("nav");
-  const draw = getHongKongDraw(id);
+  const draw = await getHongKongDraw(id);
   if (!draw) notFound();
 
   return (

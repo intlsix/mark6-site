@@ -10,7 +10,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
   const { locale, id } = await params;
-  const articles = getArticles();
+  const articles = await getArticles();
   const article = articles.find((a) => a.id === id);
   if (!article) return { title: "Not found" };
   return {
@@ -28,7 +28,7 @@ export default async function ArticleDetailPage({
   setRequestLocale(locale);
   const t = await getTranslations("knowledge");
   const common = await getTranslations("common");
-  const articles = getArticles();
+  const articles = await getArticles();
   const article = articles.find((a) => a.id === id);
   if (!article || !article.published) notFound();
 
@@ -42,7 +42,7 @@ export default async function ArticleDetailPage({
           {locale === "zh" ? article.titleZh : article.titleEn}
         </h1>
         <p className="text-xs text-text-muted/50 mb-6">
-          {new Date(article.updatedAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-US", { year: "numeric", month: "2-digit", day: "2-digit" })}
+          {new Date(article.updatedAt).toLocaleString(locale)}
         </p>
         <div className="text-sm text-text leading-relaxed whitespace-pre-wrap">
           {locale === "zh" ? article.contentZh : article.contentEn}
