@@ -25,7 +25,13 @@ export default function LoginForm() {
         body: JSON.stringify({ username, password, remember }),
         credentials: "include",
       });
-      const data = await res.json();
+      let data: { error?: string; ok?: boolean };
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text().catch(() => "");
+        throw new Error(text.slice(0, 200) || `HTTP ${res.status}`);
+      }
       if (!res.ok) throw new Error(data.error ?? "登录失败");
       startAdminSession();
       router.push("/admin/dashboard");
