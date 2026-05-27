@@ -78,9 +78,13 @@ export default function ImportDropzone() {
         <button type="button" onClick={doPreview} disabled={loading || !text} className="px-4 py-2 bg-surface-border rounded text-sm">
           预览
         </button>
-        {preview && (
+        {preview ? (
           <button type="button" onClick={doConfirm} disabled={loading} className="px-4 py-2 bg-gold text-surface rounded text-sm">
             确认导入（新增 {preview.newCount}，跳过 {preview.skipCount}）
+          </button>
+        ) : (
+          <button type="button" disabled className="px-4 py-2 bg-surface-border rounded text-sm text-text-muted cursor-not-allowed" title="请先预览数据">
+            确认导入（请先预览）
           </button>
         )}
       </div>
