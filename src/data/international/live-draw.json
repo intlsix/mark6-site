@@ -1,13 +1,13 @@
 {
   "numbers": [
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
   ],
-  "special": null,
-  "updatedAt": "2026-05-26T13:38:44.668Z",
-  "broadcasting": false
+  "special": 17,
+  "updatedAt": "2026-05-27T13:49:29.135Z",
+  "broadcasting": true
 }
