@@ -9,7 +9,8 @@ export async function requireAdmin() {
   if (payload) return { username: payload.sub, role: payload.role };
 
   const jti = store.get(REFRESH_COOKIE)?.value;
-  if (await verifyRefreshToken(jti)) return { username: "admin", role: "super" as const };
+  const refreshPayload = await verifyRefreshToken(jti);
+  if (refreshPayload) return { username: refreshPayload.sub, role: refreshPayload.role };
 
   redirect("/admin/login");
 }

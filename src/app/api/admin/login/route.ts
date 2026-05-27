@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     const access = await signAccessToken(user);
-    const refresh = createRefreshToken(user);
+    const refresh = await createRefreshToken(user);
     appendLog("login", `${user.username} 登录`, req.headers.get("x-forwarded-for") ?? undefined);
 
     const res = NextResponse.json({

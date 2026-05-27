@@ -106,8 +106,8 @@ export async function verifyAccessToken(token: string | undefined): Promise<Acce
 
 // ── Refresh token: self-contained JWT (no filesystem writes) ──
 
-export function createRefreshToken(user: AdminUser): string {
-  return new SignJWT({ role: user.role } as Record<string, unknown>)
+export async function createRefreshToken(user: AdminUser): Promise<string> {
+  return await new SignJWT({ role: user.role } as Record<string, unknown>)
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.username)
     .setIssuedAt()
