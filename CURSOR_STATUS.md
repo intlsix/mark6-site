@@ -1,108 +1,66 @@
 # ⚠️ Cursor 须知 — 项目状态清单
 
-> 最后更新：2026-05-27 — 域名上线，后台登录打通，剩余写文件操作待兼容 Netlify
+> 最后更新：2026-05-27 — 数据就绪，后台持久化待解决
 
 ---
 
-## ⛔ 已完成 — 禁止修改（除非主人明确要求）
+## ⛔ 已完成 — 禁止修改
 
-### 🏗️ 核心架构
-- [x] **双轨制**：香港开奖 + 国际开奖，全站统一岁数法，无固定生肖
-- [x] **岁数法**：号码÷12=余数→生肖，每年以太岁轮转（2026马年）
-- [x] **首页双卡片**：HkCardLive（5s轮询）+ IntlCardLive（7字圈动画）
-- [x] **国际卡状态切换**：准备中→就绪中→LIVE广播→已发布，四段动画
-
-### 🎥 实时开奖系统
-- [x] 预置开奖号码 + Cron 自动广播（每天21:30北京）+ 90秒后发布
-- [x] 号码逐个蹦出动画（700ms/球）
-
-### 🔧 后台管理（12模块全部就绪）
-- [x] 控制台 / 香港开奖 / 国际开奖 / 批量导入 / 数据导出
-- [x] 文章管理（知识库 Markdown 编辑器）
-- [x] 页面管理 / SEO管理 / 系统设置 / 管理员 / 数据备份 / 操作日志
-
-### 🌐 页面
-- [x] 首页 / 香港开奖结果 + 详情 / 国际开奖结果 + 详情 + LIVE
-- [x] 分析：红字解码入门 / 暗码冲合指南 / 成语解码
-- [x] 走势统计 / 生肖一览 / 玩法规则 / FAQ / 术语词典 / 关于
-- [x] 知识库列表 + 文章详情页
-
-### 🌍 双语 & SEO
-- [x] 简体中文 + 英语，全站纯语言显示（不混杂）
-- [x] 每页独立 SEO metadata（title/description）
-- [x] sitemap / robots 自动生成
-
-### 🔐 后台登录
-- [x] JWT 认证 + 登录页（admin / admin）
-- [x] Refresh token 改成自包含 JWT（不写文件，Netlify 兼容）
-- [x] appendLog、ensureAdminsFile、saveAdmins 已加 try-catch（Netlify 只读 FS 降级）
-
-### 🚀 部署
-- [x] GitHub: intlsix/mark6-site
-- [x] Netlify: silly-paprenjak-79940e.netlify.app
-- [x] 域名: intlsix.com（GoDaddy NS→Netlify，DNS已通）
-- [x] CI/CD: git push → Netlify 自动部署
+- **全站架构**：双轨制、岁数法、首页双卡片、国际卡动画
+- **所有页面**：开奖结果/详情/LIVE、分析、走势、生肖、知识库、FAQ、术语
+- **后台12模块**：控制台、录入开奖、导入导出、文章/页面/SEO/设置/管理员/日志
+- **登录认证**：JWT（自包含 refresh token，Netlify 兼容）
+- **双语+SEO**：简中/英语纯净化、每页独立 SEO
+- **部署**：intlsix.com（GoDaddy NS→Netlify）、git push 自动部署
+- **数据**：56 期香港开奖、147 期国际开奖
+- **18 处 writeFileSync**：全部包了 try-catch（Netlify 不崩）
 
 ---
 
-## 🚧 待办 — Netlify 只读文件系统兼容（紧急）
+## 🚧 待办
 
-**背景**：Netlify Functions 运行在只读文件系统上，任何 `fs.writeFileSync` 都会抛 EROFS。已修复的有 auth.ts 和 logs.ts。但后台其他模块还有 18 处写操作未处理。
+### 1. Netlify 后台数据持久化（重要）
 
-**修复方式**：每个 `fs.writeFileSync(...)` 包上 try-catch，失败了 console.error 然后静默跳过。
+**问题**：Netlify Functions 文件系统只读。后台所有写入操作（录入开奖、导入、保存文章、修改设置等）在线上静默失败——API 返回成功但不实际写入。本地 `npx next dev` 一切正常。
 
-### 需要改的文件和行号（共 6 个文件，18 处）：
+**方案建议**：
+- 方案A：改用 **Netlify Blobs** 存储所有可变数据（draws, knowledge-base, settings 等）
+- 方案B：数据操作全在本地 → git push → Netlify 自动部署（当前临时方案）
+- 方案C：接一个外部数据库（Supabase/PlanetScale 免费层）
 
-#### 1. `src/lib/draw/scheduled-draws.ts`（2处）
-- 第 33 行：`fs.writeFileSync(SCHED_PATH, ...)`
-- 第 46 行：`fs.writeFileSync(SETTINGS_PATH, ...)`
+**需要改的文件**：
+- 所有 `src/lib/draw/*.ts`（香港/国际开奖读写）
+- 所有 `src/lib/admin/*.ts`（articles, pages, seo, settings, analytics, backup, media, export, logs）
+- `src/app/api/admin/import/route.ts`
 
-#### 2. `src/lib/draw/live-draw.ts`（1处）
-- 第 32 行：`fs.writeFileSync(LIVE_PATH, ...)`
+**要求**：选一个方案统一实现，改完本地 `npx tsc --noEmit` 确认编译通过、本地 `npx next dev` 测试写入正常再 push。
 
-#### 3. `src/lib/draw/hongkong.ts`（1处）
-- 第 25 行：`fs.writeFileSync(DATA_PATH, ...)`
+### 2. 开奖结果列表 — 日期修正
 
-#### 4. `src/lib/draw/international.ts`（1处）
-- 第 25 行：`fs.writeFileSync(DATA_PATH, ...)`
+**问题**：56 期香港数据日期是按 3.5 天间隔估算的（2026-001 = 2025-11-15），不是真实日期。
 
-#### 5. `src/lib/admin/` 以下文件（共 9 处）
-- `media.ts` 第 27 行、第 39 行
-- `analytics.ts` 第 26 行
-- `seo.ts` 第 28 行、第 39 行
-- `articles.ts` 第 20 行
-- `backup.ts` 第 48 行、第 93 行、第 111 行
-- `pages.ts` 第 28 行、第 48 行
-- `export.ts` 第 28 行
+**文件**：`src/data/hongkong/draws.json`
 
-#### 6. `src/app/api/admin/import/route.ts`（1处）
-- 第 21 行：`fs.writeFileSync(INTL_PATH, ...)`
+**要求**：把 drawAt 改成真实香港六合彩开奖日期（周二/四/六）。
 
-### 改法示例
-```typescript
-// 改前
-fs.writeFileSync(PATH, JSON.stringify(data, null, 2) + "\n", "utf8");
+### 3. 国际开奖数据去重
 
-// 改后
-try { fs.writeFileSync(PATH, JSON.stringify(data, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
-```
+**问题**：明天 cron 自动生成 148 期会跟现有数据冲突。nextPeriod 已设 148。
 
-**规则**：
-- 只包 `writeFileSync`，不动 `readFileSync` 和 `existsSync`
-- 改完跑 `npx tsc --noEmit` 确认编译通过
-- git commit，push，Netlify 自动部署
+**文件**：`src/data/international/schedule-settings.json`
+
+**确认**：`nextPeriod` 是否为 "148"，`src/data/international/draws.json` 是否有 001-147。
 
 ---
 
-## 📋 规则（遵守，别问为什么）
+## 📋 铁律
 
-1. **生肖只认岁数法**：全站没有固定生肖表，严禁写 01=鼠 02=牛 这种
-2. **岁数法公式**：号码÷12=余数，太岁=余1，反向排列
-3. **双语纯净化**：中文页不能有英文残留，英文页不能有中文残留
-4. **首页双卡片不动**：布局、动画、轮询逻辑全部完成
-5. **国际卡 7 字圈动画**：一字一圈，21:20→21:28→21:30 三段切换
-6. **日期可编辑、数字输入去箭头、本页说明全删**
-7. **修改范围**：只改主人说的，别顺手"优化"已完成的东西
+1. **全站岁数法**，无固定生肖
+2. **双语纯净化**：中文页无英文，英文页无中文
+3. **首页双卡片不动**
+4. **号码公式**：号码÷12=余数→岁数→生肖
+5. **只改任务清单里的**，别顺手优化已完成的东西
+6. **改完必须**：`npx tsc --noEmit` 通过 + git push
 
 ---
 
@@ -111,11 +69,9 @@ try { fs.writeFileSync(PATH, JSON.stringify(data, null, 2) + "\n", "utf8"); } ca
 | 什么 | 在哪 |
 |------|------|
 | 文章内容 | `src/data/knowledge-base.json` |
-| 翻译文件 | `messages/zh.json`, `messages/en.json` |
-| SEO配置 | `src/data/admin/seo.json` |
-| 香港开奖数据 | `src/data/hongkong/draws.json` |
-| 国际开奖数据 | `src/data/international/draws.json` |
+| 翻译 | `messages/zh.json` `messages/en.json` |
+| SEO | `src/data/admin/seo.json` |
+| 香港数据 | `src/data/hongkong/draws.json` |
+| 国际数据 | `src/data/international/draws.json` |
 | 系统设置 | `src/data/admin/settings.json` |
-| 实时广播状态 | `src/data/international/live-draw.json` |
-| 预置开奖 | `src/data/international/scheduled-draws.json` |
-| 完整框架文档 | 桌面 `MARK6_SITE_FRAMEWORK_v6.md` |
+| 完整文档 | 桌面 `MARK6_SITE_FRAMEWORK_v6.md`（已删除，此文件替代） |
