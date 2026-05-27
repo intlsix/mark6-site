@@ -105,6 +105,8 @@
     "viewAll": "View all",
     "quickNav": "Quick navigation",
     "featured": "Featured articles",
+    "latestAnalysis": "Latest analysis",
+    "popularArticles": "Popular articles",
     "preparing": "International Draw Preparing",
     "ready": "International Draw Ready · {time}",
     "drawTime": "21:30"

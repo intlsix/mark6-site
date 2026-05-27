@@ -15,28 +15,11 @@
 - **数据**：56 期香港开奖、147 期国际开奖
 - **Netlify 持久化**：`@netlify/blobs` + `src/lib/storage/json-store.ts`（线上写 blob，本地写 `src/data/`）
 - **香港开奖日期**：`draws.json` 已按周二/四/六真实开奖日回溯修正（056 = 2026-05-26）
+- **首页知识板块**：最新分析（analysis×3）+ 热门文章（guide×3），`getPublishedByCategory`
 
 ---
 
 ## 🚧 待办
-
-### 首页内容板块（当前任务）
-
-在首页两个卡片下方添加两个板块，从 `knowledge-base.json` 读取数据：
-
-**板块1：最新分析** — 按 `updatedAt` 倒序取 category="analysis" 的前 3 篇
-**板块2：热门文章** — 按 `updatedAt` 倒序取 category="guide" 的前 3 篇
-
-每篇显示：标题（中文） + 摘要（中文），点击跳转 `/zh/knowledge/[id]`
-
-**文件**：`src/app/[locale]/page.tsx`
-
-**注意**：
-- 中英文版都做，用 next-intl 翻译标签
-- 英文版用 titleEn/excerptEn
-- 别改上面两个卡片
-- 样式跟现有页面风格一致（bg-surface-card、border-surface-border、text-gold）
-- 只显示已发布（published: true）的文章
 
 ### 媒体上传（次要）
 

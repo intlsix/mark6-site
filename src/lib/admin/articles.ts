@@ -12,6 +12,17 @@ export async function getPublishedArticles(): Promise<KnowledgeArticle[]> {
   return articles.filter((a) => a.published);
 }
 
+export async function getPublishedByCategory(
+  category: string,
+  limit = 3,
+): Promise<KnowledgeArticle[]> {
+  const articles = await getPublishedArticles();
+  return articles
+    .filter((a) => a.category === category)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, limit);
+}
+
 export async function saveArticles(articles: KnowledgeArticle[]): Promise<boolean> {
   return writeJson(KEY, articles);
 }

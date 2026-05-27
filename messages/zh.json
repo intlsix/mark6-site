@@ -105,6 +105,8 @@
     "viewAll": "查看全部",
     "quickNav": "快捷导航",
     "featured": "精选文章",
+    "latestAnalysis": "最新分析",
+    "popularArticles": "热门文章",
     "preparing": "国际开奖准备中",
     "ready": "国际开奖就绪中 · {time}",
     "drawTime": "21:30"
