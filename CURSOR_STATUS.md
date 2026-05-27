@@ -20,6 +20,24 @@
 
 ## 🚧 待办
 
+### 首页内容板块（当前任务）
+
+在首页两个卡片下方添加两个板块，从 `knowledge-base.json` 读取数据：
+
+**板块1：最新分析** — 按 `updatedAt` 倒序取 category="analysis" 的前 3 篇
+**板块2：热门文章** — 按 `updatedAt` 倒序取 category="guide" 的前 3 篇
+
+每篇显示：标题（中文） + 摘要（中文），点击跳转 `/zh/knowledge/[id]`
+
+**文件**：`src/app/[locale]/page.tsx`
+
+**注意**：
+- 中英文版都做，用 next-intl 翻译标签
+- 英文版用 titleEn/excerptEn
+- 别改上面两个卡片
+- 样式跟现有页面风格一致（bg-surface-card、border-surface-border、text-gold）
+- 只显示已发布（published: true）的文章
+
 ### 媒体上传（次要）
 
 Netlify 上 `public/uploads/` 仍不可写；后台媒体库元数据可存 blob，但**图片二进制上传**需后续改为 Blob 二进制或外部 CDN。
