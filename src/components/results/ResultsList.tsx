@@ -105,7 +105,6 @@ export default function ResultsList({ draws, mode, locale }: Props) {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <Link href={linkPath} className="font-medium text-gold">{d.id}</Link>
-                    <p className="text-sm text-text-muted">{new Date(d.drawAt).toLocaleString(locale)}</p>
                   </div>
                   <Link href={linkPath} className="text-sm">{t("viewDetail")}</Link>
                 </div>

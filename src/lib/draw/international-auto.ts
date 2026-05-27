@@ -6,41 +6,47 @@ export const INTL_DRAW_HOUR_UTC = 13;
 export const INTL_DRAW_MINUTE_UTC = 30;
 
 /**
- * 生成期号：
- * - 如果 settings.nextPeriod 有值（如"001"），用该值并自动递增保存
- * - 否则按日期生成 INT-20260526（每天一期不会重复）
+ * 生成期号：年号-期号，如 2026-001
+ * - 如果 settings.nextPeriod 有值，用该值并自动递增
+ * - 否则按年自动编号（每年从 001 开始）
  */
 export function nextIntlDrawId(existing: DrawRecord[], forDate: Date): string {
+  const year = forDate.getFullYear();
   const settings = readScheduleSettings();
-
-  let baseNum: number;
 
   if (settings.nextPeriod && settings.nextPeriod.trim()) {
     // 手动模式：使用设置的期号
-    baseNum = parseInt(settings.nextPeriod.trim(), 10);
-    if (isNaN(baseNum)) baseNum = 0;
+    let baseNum = parseInt(settings.nextPeriod.trim(), 10);
+    if (isNaN(baseNum)) baseNum = 1;
 
     // 确保不跟已有记录冲突
     const maxExisting = existing
+      .filter((d) => d.id.startsWith(`${year}-`))
       .map((d) => {
-        const m = d.id.match(/^INT-(\d+)/);
-        return m ? parseInt(m[1], 10) : 0;
+        const m = d.id.match(/^(\d{4})-(\d+)$/);
+        return m ? parseInt(m[2], 10) : 0;
       })
       .reduce((a, b) => Math.max(a, b), 0);
     baseNum = Math.max(baseNum, maxExisting + 1);
 
     // 自动递增下一期
     const nextVal = String(baseNum + 1).padStart(3, "0");
-    writeScheduleSettings({ ...settings, nextPeriod: nextVal });
-  } else {
-    // 自动模式：按日期生成
-    const y = forDate.getFullYear();
-    const m = String(forDate.getMonth() + 1).padStart(2, "0");
-    const d = String(forDate.getDate()).padStart(2, "0");
-    baseNum = parseInt(`${y}${m}${d}`, 10);
+    try { writeScheduleSettings({ ...settings, nextPeriod: nextVal }); } catch { /* read-only FS */ }
+
+    return `${year}-${String(baseNum).padStart(3, "0")}`;
   }
 
-  return `INT-${String(baseNum).padStart(3, "0")}`;
+  // 自动模式：按年编号
+  const yearDraws = existing.filter((d) => d.id.startsWith(`${year}-`));
+  const maxNum = yearDraws
+    .map((d) => {
+      const m = d.id.match(/^(\d{4})-(\d+)$/);
+      return m ? parseInt(m[2], 10) : 0;
+    })
+    .reduce((a, b) => Math.max(a, b), 0);
+
+  const nextNum = maxNum + 1;
+  return `${year}-${String(nextNum).padStart(3, "0")}`;
 }
 
 export function utcDrawTimeForDate(date: Date): Date {
