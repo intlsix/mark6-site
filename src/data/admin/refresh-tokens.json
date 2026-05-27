@@ -52,5 +52,11 @@
     "role": "super",
     "exp": 1780479048769,
     "lastAct": 1779874248769
+  },
+  "f09c598d-6e4f-49cb-bc79-de1f5b3a144d": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780507035400,
+    "lastAct": 1779902235400
   }
 }
