@@ -22,7 +22,7 @@ function readManual(): DrawRecord[] {
 }
 
 function writeManual(draws: DrawRecord[]): void {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(DATA_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 function mergeDraws(stored: DrawRecord[]): DrawRecord[] {

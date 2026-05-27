@@ -25,7 +25,7 @@ function ensure(): StaticPage[] {
   const dir = path.dirname(DATA_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   if (!fs.existsSync(DATA_PATH)) {
-    fs.writeFileSync(DATA_PATH, JSON.stringify(DEFAULT_PAGES, null, 2) + "\n", "utf8");
+    try { fs.writeFileSync(DATA_PATH, JSON.stringify(DEFAULT_PAGES, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
     return DEFAULT_PAGES;
   }
   return JSON.parse(fs.readFileSync(DATA_PATH, "utf8")) as StaticPage[];
@@ -45,5 +45,5 @@ export function upsertPage(page: StaticPage): void {
   const next = { ...page, updatedAt: new Date().toISOString() };
   if (idx >= 0) all[idx] = next;
   else all.push(next);
-  fs.writeFileSync(DATA_PATH, JSON.stringify(all, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(DATA_PATH, JSON.stringify(all, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }

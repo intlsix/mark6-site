@@ -17,7 +17,7 @@ export function getPublishedArticles(): KnowledgeArticle[] {
 }
 
 export function saveArticles(articles: KnowledgeArticle[]): void {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(articles, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(DATA_PATH, JSON.stringify(articles, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export function upsertArticle(article: KnowledgeArticle): void {

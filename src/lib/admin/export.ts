@@ -25,7 +25,7 @@ function readHistory(): ExportRecord[] {
 function writeHistory(records: ExportRecord[]): void {
   const dir = path.dirname(HISTORY_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(HISTORY_PATH, JSON.stringify(records.slice(0, 50), null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(HISTORY_PATH, JSON.stringify(records.slice(0, 50), null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export function getExportHistory(): ExportRecord[] {

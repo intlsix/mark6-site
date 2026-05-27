@@ -29,7 +29,7 @@ export function writeLiveDraw(state: LiveDrawState): void {
   const dir = path.dirname(LIVE_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   state.updatedAt = new Date().toISOString();
-  fs.writeFileSync(LIVE_PATH, JSON.stringify(state, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(LIVE_PATH, JSON.stringify(state, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export function resetLiveDraw(): void {

@@ -45,7 +45,7 @@ export function getSettings(): SiteSettings {
 export function saveSettings(s: SiteSettings): void {
   const dir = path.dirname(SETTINGS_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(s, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(SETTINGS_PATH, JSON.stringify(s, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 function listBackups(): BackupRecord[] {
@@ -90,7 +90,7 @@ export function createBackup(): BackupRecord {
     }
   }
   const content = JSON.stringify(bundle, null, 2);
-  fs.writeFileSync(path.join(BACKUP_DIR, filename), content, "utf8");
+  try { fs.writeFileSync(path.join(BACKUP_DIR, filename), content, "utf8"); } catch { /* read-only FS */ }
   return {
     id,
     filename,
@@ -108,7 +108,7 @@ export function restoreBackup(id: string): boolean {
     const target = path.join(process.cwd(), rel);
     const dir = path.dirname(target);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(target, JSON.stringify(data, null, 2) + "\n", "utf8");
+    try { fs.writeFileSync(target, JSON.stringify(data, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
   }
   return true;
 }

@@ -24,7 +24,7 @@ function readMeta(): MediaItem[] {
 function writeMeta(items: MediaItem[]): void {
   const dir = path.dirname(META_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(META_PATH, JSON.stringify(items, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(META_PATH, JSON.stringify(items, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export function getMediaItems(): MediaItem[] {
@@ -36,7 +36,7 @@ export function saveUpload(file: Buffer, originalName: string): MediaItem {
   const ext = path.extname(originalName).toLowerCase() || ".jpg";
   const safe = `${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
   const full = path.join(UPLOAD_DIR, safe);
-  fs.writeFileSync(full, file);
+  try { fs.writeFileSync(full, file); } catch { /* read-only FS */ }
   const item: MediaItem = {
     id: randomUUID(),
     filename: safe,

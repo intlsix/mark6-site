@@ -23,7 +23,7 @@ export function getAnalytics(): AnalyticsData {
 }
 
 export function saveAnalytics(data: AnalyticsData): void {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export function trackPageView(pv: PageView): void {

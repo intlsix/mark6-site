@@ -18,7 +18,7 @@ function getIntlManual(): DrawRecord[] {
 }
 
 function saveIntlManual(draws: DrawRecord[]) {
-  fs.writeFileSync(INTL_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(INTL_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export async function POST(req: NextRequest) {

@@ -30,7 +30,7 @@ export function readScheduledDraws(): ScheduledDraw[] {
 
 export function writeScheduledDraws(draws: ScheduledDraw[]): void {
   ensureDir();
-  fs.writeFileSync(SCHED_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(SCHED_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export function readScheduleSettings(): ScheduleSettings {
@@ -43,7 +43,7 @@ export function readScheduleSettings(): ScheduleSettings {
 
 export function writeScheduleSettings(s: ScheduleSettings): void {
   ensureDir();
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(s, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(SETTINGS_PATH, JSON.stringify(s, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export function getTodaysScheduledDraw(): ScheduledDraw | null {

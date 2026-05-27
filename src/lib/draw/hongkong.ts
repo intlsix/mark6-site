@@ -22,5 +22,5 @@ export function getHongKongDraw(id: string): DrawRecord | undefined {
 }
 
 export function saveHongKongDraws(draws: DrawRecord[]): void {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(DATA_PATH, JSON.stringify(draws, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }

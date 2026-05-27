@@ -25,7 +25,7 @@ function ensure(): SeoEntry[] {
   const dir = path.dirname(DATA_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   if (!fs.existsSync(DATA_PATH)) {
-    fs.writeFileSync(DATA_PATH, JSON.stringify(DEFAULTS, null, 2) + "\n", "utf8");
+    try { fs.writeFileSync(DATA_PATH, JSON.stringify(DEFAULTS, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
     return DEFAULTS;
   }
   return JSON.parse(fs.readFileSync(DATA_PATH, "utf8")) as SeoEntry[];
@@ -36,7 +36,7 @@ export function getSeoEntries(): SeoEntry[] {
 }
 
 export function saveSeoEntries(entries: SeoEntry[]): void {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(entries, null, 2) + "\n", "utf8");
+  try { fs.writeFileSync(DATA_PATH, JSON.stringify(entries, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
 export function generateSitemapXml(baseUrl: string): string {
