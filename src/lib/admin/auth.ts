@@ -48,7 +48,7 @@ export function hashPassword(password: string): string {
 
 function ensureAdminsFile(): AdminRecord[] {
   const dir = path.dirname(ADMINS_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  try { if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); } catch { /* read-only FS */ }
   if (!fs.existsSync(ADMINS_PATH)) {
     const defaultAdmins: AdminRecord[] = [
       {
@@ -59,18 +59,18 @@ function ensureAdminsFile(): AdminRecord[] {
         createdAt: new Date().toISOString(),
       },
     ];
-    fs.writeFileSync(ADMINS_PATH, JSON.stringify(defaultAdmins, null, 2) + "\n", "utf8");
+    try { fs.writeFileSync(ADMINS_PATH, JSON.stringify(defaultAdmins, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
     return defaultAdmins;
   }
   return JSON.parse(fs.readFileSync(ADMINS_PATH, "utf8")) as AdminRecord[];
 }
 
-export function getAdmins(): AdminRecord[] {
-  return ensureAdminsFile();
+export function saveAdmins(admins: AdminRecord[]): void {
+  try { fs.writeFileSync(ADMINS_PATH, JSON.stringify(admins, null, 2) + "\n", "utf8"); } catch { /* read-only FS */ }
 }
 
-export function saveAdmins(admins: AdminRecord[]): void {
-  fs.writeFileSync(ADMINS_PATH, JSON.stringify(admins, null, 2) + "\n", "utf8");
+export function getAdmins(): AdminRecord[] {
+  return ensureAdminsFile();
 }
 
 export function verifyCredentials(username: string, password: string): AdminUser | null {

@@ -13,6 +13,17 @@ function readLogs(): AdminLogEntry[] {
   }
 }
 
+function safeWrite(data: string): boolean {
+  try {
+    fs.writeFileSync(LOG_PATH, data, "utf8");
+    return true;
+  } catch (err) {
+    // Netlify / read-only filesystem — silently skip
+    console.warn("appendLog: cannot write to logs.json (read-only FS)");
+    return false;
+  }
+}
+
 export function appendLog(action: string, detail: string, ip?: string): AdminLogEntry {
   const entry: AdminLogEntry = {
     id: randomUUID(),
@@ -23,7 +34,7 @@ export function appendLog(action: string, detail: string, ip?: string): AdminLog
   };
   const logs = readLogs();
   logs.unshift(entry);
-  fs.writeFileSync(LOG_PATH, JSON.stringify(logs.slice(0, 500), null, 2) + "\n", "utf8");
+  safeWrite(JSON.stringify(logs.slice(0, 500), null, 2) + "\n");
   return entry;
 }
 
