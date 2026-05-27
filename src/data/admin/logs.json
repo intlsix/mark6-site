@@ -1,5 +1,29 @@
 [
   {
+    "id": "fa865235-ae0f-4923-85c1-abf1c7a875e7",
+    "at": "2026-05-27T13:50:59.144Z",
+    "action": "auto_live_publish",
+    "detail": "自动广播发布 INT-20260527"
+  },
+  {
+    "id": "8f273fa7-1782-4589-b32a-20ac020661fd",
+    "at": "2026-05-27T13:50:40.224Z",
+    "action": "auto_live_start",
+    "detail": "自动广播开始 随机生成（自动接管）"
+  },
+  {
+    "id": "25dc0419-fa98-488e-9bd3-1fc908201ee4",
+    "at": "2026-05-27T13:50:18.998Z",
+    "action": "auto_live_publish",
+    "detail": "自动广播发布 INT-20260527"
+  },
+  {
+    "id": "e6b2ad35-7383-4819-86ba-80738fe63117",
+    "at": "2026-05-27T13:49:29.140Z",
+    "action": "auto_live_start",
+    "detail": "自动广播开始 预置 2026-05-27"
+  },
+  {
     "id": "4199f5ea-6f11-4c00-89cf-0de8922cec61",
     "at": "2026-05-27T09:30:48.770Z",
     "action": "login",
