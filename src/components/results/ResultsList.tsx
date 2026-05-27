@@ -30,7 +30,8 @@ export default function ResultsList({ draws, mode, locale }: Props) {
     if (year !== "all") {
       list = list.filter((d) => new Date(d.drawAt).getFullYear() === Number(year));
     }
-    return list.slice(0, limit);
+    if (limit > 0) list = list.slice(0, limit);
+    return list;
   }, [draws, limit, year]);
 
   const showYearPicker = limit === 0;
@@ -52,6 +53,7 @@ export default function ResultsList({ draws, mode, locale }: Props) {
           <option value={10}>10 {t("periods")}</option>
           <option value={50}>50 {t("periods")}</option>
           <option value={100}>100 {t("periods")}</option>
+          <option value={-1}>{t("all")}</option>
           <option value={0}>{t("byYear")}</option>
         </select>
 
