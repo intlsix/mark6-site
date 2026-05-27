@@ -1,0 +1,47 @@
+[
+  {
+    "slug": "about",
+    "titleZh": "关于我们",
+    "titleEn": "About Us",
+    "contentZh": "香港国际六合彩致力于提供透明的开奖资讯。",
+    "contentEn": "Hong Kong International Mark Six provides transparent draw information.",
+    "published": true,
+    "updatedAt": "2026-05-25T22:25:37.389Z"
+  },
+  {
+    "slug": "terms",
+    "titleZh": "服务条款",
+    "titleEn": "Terms of Service",
+    "contentZh": "使用本网站即表示您同意以下条款。",
+    "contentEn": "By using this site you agree to the following terms.",
+    "published": true,
+    "updatedAt": "2026-05-25T22:25:37.389Z"
+  },
+  {
+    "slug": "privacy",
+    "titleZh": "隐私政策",
+    "titleEn": "Privacy Policy",
+    "contentZh": "我们重视您的隐私。",
+    "contentEn": "We value your privacy.",
+    "published": true,
+    "updatedAt": "2026-05-25T22:25:37.389Z"
+  },
+  {
+    "slug": "responsible",
+    "titleZh": "负责任游戏",
+    "titleEn": "Responsible Gaming",
+    "contentZh": "请理性参与，18岁以上。",
+    "contentEn": "Play responsibly. 18+ only.",
+    "published": true,
+    "updatedAt": "2026-05-25T22:25:37.389Z"
+  },
+  {
+    "slug": "contact",
+    "titleZh": "联系我们",
+    "titleEn": "Contact",
+    "contentZh": "如有疑问请联系客服。",
+    "contentEn": "Contact support for inquiries.",
+    "published": true,
+    "updatedAt": "2026-05-26T13:02:01.377Z"
+  }
+]

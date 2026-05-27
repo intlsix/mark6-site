@@ -1,0 +1,56 @@
+{
+  "e947f348-7697-4387-898b-fa9a81067f73": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780352666946,
+    "lastAct": 1779748725176
+  },
+  "0b900c65-9592-40cc-b0e5-f0b444de5cbc": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780390874818,
+    "lastAct": 1779790259264
+  },
+  "8bed2d84-7b8d-4a84-943a-ca9c03d69787": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780400105143,
+    "lastAct": 1779798841264
+  },
+  "6d04b776-2648-408d-a892-591151969405": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780404870987,
+    "lastAct": 1779800070987
+  },
+  "d06b6dbe-7728-4b3a-a14a-a15a925599b0": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780405296380,
+    "lastAct": 1779800496380
+  },
+  "f04d921b-0b51-4367-9c93-2191c82355b5": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780405967215,
+    "lastAct": 1779801167215
+  },
+  "9fcf0764-e655-454d-8aa3-f04a7d09d6a2": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780407120004,
+    "lastAct": 1779805414510
+  },
+  "e7b2c5d8-8964-4113-b4f8-2a5e33373ab3": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780416539450,
+    "lastAct": 1779811739450
+  },
+  "45f66962-ee02-4854-87c4-819804e873dc": {
+    "username": "admin",
+    "role": "super",
+    "exp": 1780479048769,
+    "lastAct": 1779874248769
+  }
+}

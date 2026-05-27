@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  @apply bg-surface text-text antialiased;
+}
+
+a {
+  @apply text-gold hover:text-gold-light transition-colors;
+}

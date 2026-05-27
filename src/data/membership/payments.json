@@ -1,0 +1,14 @@
+[
+  {
+    "id": "b804a40d-686",
+    "memberId": "520741e9-a98",
+    "email": "user@user.com",
+    "tier": "silver",
+    "amountUsdt": 15,
+    "status": "pending",
+    "txId": null,
+    "paymentRef": "sub_520741e9-a98_f05af384",
+    "createdAt": "2026-05-26T16:04:42.981Z",
+    "confirmedAt": null
+  }
+]

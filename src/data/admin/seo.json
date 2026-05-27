@@ -1,0 +1,51 @@
+[
+  {
+    "path": "/",
+    "titleZh": "香港国际六合彩",
+    "titleEn": "Hong Kong Intl Mark Six",
+    "descZh": "香港开奖与国际开奖双轨平台，每日北京21:30自动开奖，种子可验证",
+    "descEn": "Hong Kong and International Mark Six draws, daily at 21:30 Beijing time, verifiable fairness"
+  },
+  {
+    "path": "/results/hongkong",
+    "titleZh": "香港开奖结果",
+    "titleEn": "Hong Kong Mark Six Results",
+    "descZh": "香港六合彩开奖号码查询，波色球显示，岁数法生肖",
+    "descEn": "Hong Kong Mark Six draw results with wave colors and age-method zodiac"
+  },
+  {
+    "path": "/results/international",
+    "titleZh": "国际开奖结果",
+    "titleEn": "International Mark Six Results",
+    "descZh": "每日国际自营开奖，UTC 13:30自动开出，种子哈希可验证公平性",
+    "descEn": "Daily international draws, auto-drawn at UTC 13:30 with verifiable seed hash"
+  },
+  {
+    "path": "/zodiac",
+    "titleZh": "生肖工具 - 岁数法查询",
+    "titleEn": "Zodiac Tools - Age Method",
+    "descZh": "号码查生肖，岁数法每年以太岁轮转，三合六冲可视化",
+    "descEn": "Look up zodiac by number using the annual age method, with sanhe/liuchong visualization"
+  },
+  {
+    "path": "/trends",
+    "titleZh": "开奖走势分析",
+    "titleEn": "Mark Six Trends",
+    "descZh": "香港与国际开奖号码频率统计，冷热号分析",
+    "descEn": "Hong Kong and International draw number frequency and hot/cold analysis"
+  },
+  {
+    "path": "/rules",
+    "titleZh": "玩法规则",
+    "titleEn": "Rules & How to Play",
+    "descZh": "香港标准六合彩与国际民间玩法完整规则说明",
+    "descEn": "Complete rules for Hong Kong and International Mark Six betting"
+  },
+  {
+    "path": "/knowledge",
+    "titleZh": "六合彩知识库",
+    "titleEn": "Mark Six Knowledge Base",
+    "descZh": "六合彩历史、文化、生肖、波色、玩法知识大全",
+    "descEn": "Mark Six history, culture, zodiac, wave colors, and gameplay guides"
+  }
+]

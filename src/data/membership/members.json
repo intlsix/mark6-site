@@ -1,0 +1,22 @@
+[
+  {
+    "id": "88b14ebe-efa",
+    "email": "test@test.com",
+    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+    "tier": "free",
+    "tierExpiresAt": null,
+    "createdAt": "2026-05-26T15:12:07.471Z",
+    "lastLoginAt": "2026-05-26T15:12:07.471Z",
+    "telegramId": null
+  },
+  {
+    "id": "520741e9-a98",
+    "email": "user@user.com",
+    "passwordHash": "b238c595b84321b35b8e57610c49523d4e3b9b5b5d090923e9e54f4b929bedba",
+    "tier": "free",
+    "tierExpiresAt": null,
+    "createdAt": "2026-05-26T16:04:27.663Z",
+    "lastLoginAt": "2026-05-26T16:04:27.663Z",
+    "telegramId": null
+  }
+]
