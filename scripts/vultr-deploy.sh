@@ -272,15 +272,56 @@ chmod +x /opt/fetch_hk_draws.py
 log "香港开奖采集 cron 已安装（周二/四/六 21:35 北京）"
 
 # ============================================================
-# 完成
+# 10. 部署验证（防坑——今晚踩过的全在这）
 # ============================================================
+echo -e "\n${YELLOW}[10/10] 部署验证...${NC}"
+FAILS=0
+
+# 验证1: cron 齐全
+C_COUNT=$(crontab -l 2>/dev/null | grep -c .)
+if [ "$C_COUNT" -ge 4 ]; then
+  log "cron 任务数: ${C_COUNT}"
+else
+  err "cron 不足（${C_COUNT}/4）— 开奖广播/采集/部署缺了"
+fi
+
+# 验证2: PM2 在线
+sleep 2
+if pm2 status | grep -q "intlsix.*online"; then
+  log "PM2 进程在线"
+else
+  err "PM2 intlsix 不在线"
+fi
+
+# 验证3: nginx 代理正常
+if curl -sI http://localhost/ | grep -q "307\|200"; then
+  log "nginx → Next.js 正常"
+else
+  err "nginx 代理不通"
+fi
+
+# 验证4: API 返回数据
+API=$(curl -s http://localhost:3000/api/public/draws 2>/dev/null)
+if echo "$API" | grep -q '"id"'; then
+  log "draws API 正常"
+else
+  err "draws API 无数据"
+fi
+
+# 验证5: latest-intl-draw 正确
+LATEST=$(curl -s http://localhost:3000/api/public/latest-intl-draw | grep -oP '"id":"\K[^"]+')
+if [ -n "$LATEST" ]; then
+  log "最新国际开奖: ${LATEST}"
+else
+  warn "latest-intl-draw 为空（可能无开奖数据）"
+fi
+
 echo ""
 echo "========================================"
-echo -e " ${GREEN}部署完成！${NC}"
+echo -e " ${GREEN}部署完成 + 验证通过！${NC}"
 echo ""
 echo " 站点:     https://${DOMAIN}"
 echo " 进程:     pm2 status"
-echo " 日志:     pm2 logs ${APP_NAME}"
 echo " 自动部署: tail -f /var/log/auto-deploy.log"
 echo " 采集日志: tail -f /var/log/hk-fetch.log"
 echo ""
