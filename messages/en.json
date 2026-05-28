@@ -11,6 +11,7 @@
     "trends": "Trends",
     "zodiac": "Zodiac Tools",
     "rules": "Game Rules",
+    "news": "News",
     "analysis": "Analysis",
     "glossary": "Glossary",
     "knowledge": "Knowledge",
@@ -260,6 +261,7 @@
     "codesCardDesc": "Clash / triad / pair",
     "samples": "Samples"
   },
+  "news": { "title": "News", "noPosts": "No news yet" },
   "knowledge": { "title": "Knowledge", "read": "Read", "noPosts": "No posts yet" },
   "glossary": {
     "title": "Glossary",
@@ -335,5 +337,5 @@
   "waves": { "红波": "Red", "蓝波": "Blue", "绿波": "Green" },
   "relations": { "clash": "Clash", "sanhe": "Triad", "pair": "Pair", "self": "Self" },
   "idiomPaths": { "story": "Story", "imagery": "Imagery", "direct": "Direct", "keyword": "Keyword" },
-  "common": { "breadcrumbHome": "Home", "period": "Period", "date": "Date", "readMore": "Read more →", "back": "← Back" }
+  "common": { "breadcrumbHome": "Home", "period": "Period", "date": "Date", "readMore": "Read more →", "back": "← Back", "backToList": "← Back to" }
 }

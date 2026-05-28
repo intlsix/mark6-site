@@ -11,6 +11,7 @@
     "trends": "走势",
     "zodiac": "生肖工具",
     "rules": "玩法规则",
+    "news": "新闻",
     "analysis": "分析",
     "glossary": "术语词典",
     "knowledge": "知识库",
@@ -260,6 +261,7 @@
     "codesCardDesc": "冲合加权",
     "samples": "样本期"
   },
+  "news": { "title": "新闻", "noPosts": "暂无新闻" },
   "knowledge": { "title": "知识库", "read": "阅读", "noPosts": "暂无帖子" },
   "glossary": {
     "title": "术语词典",
@@ -335,5 +337,5 @@
   "waves": { "红波": "红波", "蓝波": "蓝波", "绿波": "绿波" },
   "relations": { "clash": "六冲", "sanhe": "三合", "pair": "六合", "self": "自身" },
   "idiomPaths": { "story": "典故", "imagery": "意象", "direct": "直解", "keyword": "关键词" },
-  "common": { "breadcrumbHome": "首页", "period": "期号", "date": "日期", "readMore": "阅读全文 →", "back": "← 返回列表" }
+  "common": { "breadcrumbHome": "首页", "period": "期号", "date": "日期", "readMore": "阅读全文 →", "back": "← 返回列表", "backToList": "← 返回" }
 }

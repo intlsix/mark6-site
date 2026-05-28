@@ -13,7 +13,7 @@ export default async function KnowledgePage({ params }: { params: Promise<{ loca
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("knowledge");
-  const articles = await getPublishedArticles();
+  const articles = (await getPublishedArticles()).filter((a) => a.category !== "news");
 
   return (
     <div>
