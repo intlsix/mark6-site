@@ -1,6 +1,13 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getSeoForPath } from "@/lib/admin/seo";
+import type { Metadata } from "next";
 import LegalNotice from "@/components/layout/LegalNotice";
 import { RulesBasic, BetTable, ZodiacWaveRef } from "@/components/mark6/RulesContent";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return await getSeoForPath("/rules/international", locale);
+}
 
 export default async function RulesIntlPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

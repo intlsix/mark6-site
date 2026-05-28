@@ -1,5 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getSeoForPath } from "@/lib/admin/seo";
+import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return await getSeoForPath("/analysis", locale);
+}
 
 export default async function AnalysisHubPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
