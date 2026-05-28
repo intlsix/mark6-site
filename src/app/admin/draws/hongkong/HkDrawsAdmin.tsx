@@ -19,12 +19,35 @@ export default function HkDrawsAdmin() {
   // Select for batch delete
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  // Scrape state
+  const [scraping, setScraping] = useState(false);
+
   useEffect(() => {
     refresh();
   }, []);
 
   async function refresh() {
     setDraws(await adminJson<DrawRecord[]>("/api/admin/hk-draws"));
+  }
+
+  async function triggerScrape() {
+    setScraping(true);
+    setToast("正在采集…");
+    try {
+      const res = await adminJson<{ ok: boolean; message: string; count?: number }>(
+        "/api/admin/scrape",
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
+      );
+      if (res?.ok) {
+        setToast(`✅ 采集成功，新增 ${res.count ?? 0} 期`);
+        await refresh();
+      } else {
+        setToast(res?.message ?? "采集失败");
+      }
+    } catch {
+      setToast("采集请求失败");
+    }
+    setScraping(false);
   }
 
   function resetForm() {
@@ -167,6 +190,19 @@ export default function HkDrawsAdmin() {
             )}
           </div>
         </div>
+      </section>
+
+      {/* 自动采集 */}
+      <section className="rounded-lg border border-surface-border bg-surface-card p-5 mb-6">
+        <h2 className="text-lg text-gold font-bold mb-3">🔗 自动采集</h2>
+        <p className="text-xs text-text-muted mb-3">
+          从配置的采集源自动抓取开奖号码。采集源 URL 在「系统设置」中配置。
+          <br />定时采集：每周二/四/六 21:35（北京时间）。
+        </p>
+        <button type="button" onClick={triggerScrape} disabled={scraping}
+          className="px-4 py-2 bg-gold/20 text-gold rounded text-sm border border-gold/30 hover:bg-gold/30 disabled:opacity-50">
+          {scraping ? "采集中…" : "🧪 手动采集"}
+        </button>
       </section>
 
       {/* 开奖记录 */}
