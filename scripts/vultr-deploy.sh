@@ -77,6 +77,7 @@ fi
 # ============================================================
 echo -e "\n${YELLOW}[5/9] 安装依赖 + 构建...${NC}"
 cd "$APP_DIR"
+rm -rf .next   # 清理旧构建缓存，防止 ENOTEMPTY 错误
 npm install --silent
 NODE_OPTIONS="--max-old-space-size=1024" npm run build
 log "构建完成"
