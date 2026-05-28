@@ -268,7 +268,7 @@ HKFETCH
 
 chmod +x /opt/fetch_hk_draws.py
 # HK draw cron: Tue/Thu/Sat at 21:35 Beijing (13:35 UTC)
-(crontab -l 2>/dev/null | grep -v 'fetch_hk_draws.py'; echo '35 13 * * 2,4,6 python3 /opt/fetch_hk_draws.py >> /var/log/hk-fetch.log 2>&1') | crontab -
+(crontab -l 2>/dev/null | grep -v 'fetch_hk_draws.py\|auto-live-broadcast'; echo '35 13 * * 2,4,6 python3 /opt/fetch_hk_draws.py >> /var/log/hk-fetch.log 2>&1'; echo '30 13 * * * curl -s http://localhost:3000/api/cron/auto-live-broadcast >> /var/log/auto-live.log 2>&1'; echo '38 13 * * * curl -s http://localhost:3000/api/cron/auto-live-broadcast >> /var/log/auto-live.log 2>&1') | crontab -
 log "香港开奖采集 cron 已安装（周二/四/六 21:35 北京）"
 
 # ============================================================

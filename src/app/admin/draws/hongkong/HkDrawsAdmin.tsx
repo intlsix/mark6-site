@@ -5,6 +5,11 @@ import { AdminToast } from "@/components/admin/AdminToast";
 import { adminFetch, adminJson } from "@/lib/admin/admin-fetch";
 import type { DrawRecord } from "@/lib/mark6/types";
 
+interface ScrapeConfig {
+  hkScrapeUrl: string;
+  hkScrapeEnabled: boolean;
+}
+
 export default function HkDrawsAdmin() {
   const [toast, setToast] = useState("");
   const [draws, setDraws] = useState<DrawRecord[]>([]);
@@ -19,15 +24,33 @@ export default function HkDrawsAdmin() {
   // Select for batch delete
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // Scrape state
+  // Scrape config
+  const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scrapeEnabled, setScrapeEnabled] = useState(false);
   const [scraping, setScraping] = useState(false);
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  useEffect(() => { refresh(); loadScrapeConfig(); }, []);
 
   async function refresh() {
     setDraws(await adminJson<DrawRecord[]>("/api/admin/hk-draws"));
+  }
+
+  async function loadScrapeConfig() {
+    try {
+      const s = await adminJson<ScrapeConfig & Record<string, unknown>>("/api/admin/settings");
+      setScrapeUrl((s?.hkScrapeUrl as string) ?? "");
+      setScrapeEnabled((s?.hkScrapeEnabled as boolean) ?? false);
+    } catch {}
+  }
+
+  async function saveScrapeConfig() {
+    const settings = await adminJson<Record<string, unknown>>("/api/admin/settings");
+    const updated = { ...settings, hkScrapeUrl: scrapeUrl, hkScrapeEnabled: scrapeEnabled };
+    await adminJson("/api/admin/settings", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+    setToast("采集配置已保存");
   }
 
   async function triggerScrape() {
@@ -78,12 +101,8 @@ export default function HkDrawsAdmin() {
       setToast("请填写完整的期号、6个平码和特码");
       return;
     }
-    // Trim whitespace from formId
     const id = formId.trim();
-    if (!id) {
-      setToast("期号不能为空");
-      return;
-    }
+    if (!id) { setToast("期号不能为空"); return; }
     const data: DrawRecord = {
       id: `${formDate.slice(0, 4)}-${id}`,
       drawAt: formDate,
@@ -93,9 +112,7 @@ export default function HkDrawsAdmin() {
     };
     const method = editId ? "PUT" : "POST";
     await adminJson("/api/admin/hk-draws", {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
     });
     setToast(editId ? "已修改" : "已添加");
     resetForm();
@@ -135,24 +152,47 @@ export default function HkDrawsAdmin() {
   }
 
   const allSelected = draws.length > 0 && selected.size === draws.length;
-
-  // Sort draws by date descending
   const sorted = [...draws].sort((a, b) => b.drawAt.localeCompare(a.drawAt));
 
   return (
     <div>
-      <AdminToast msg={toast} type={toast.includes("已") ? "ok" : "err"} />
+      <AdminToast msg={toast} type={toast.includes("已") || toast.includes("成功") ? "ok" : "err"} />
 
-      {/* 录入/修改表单 */}
+      {/* 自动采集 */}
       <section className="rounded-lg border border-surface-border bg-surface-card p-5 mb-6">
-        <h2 className="text-lg text-gold font-bold mb-3">{editId ? "✏️ 修改开奖" : "📝 手动录入开奖"}</h2>
-        <p className="text-xs text-text-muted mb-4">香港开奖数据需手动录入。期号格式如 2026-057。</p>
+        <h2 className="text-lg text-gold font-bold mb-3">🔗 自动采集</h2>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-text-muted">采集源 URL</label>
+            <input type="text" value={scrapeUrl} onChange={(e) => setScrapeUrl(e.target.value)}
+              className="mt-1 w-full rounded border border-surface-border bg-surface px-3 py-2 text-sm text-text" />
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={scrapeEnabled}
+                onChange={(e) => setScrapeEnabled(e.target.checked)} className="accent-gold" />
+              启用定时采集（周二/四/六 21:35 自动抓取）
+            </label>
+            <button type="button" onClick={saveScrapeConfig}
+              className="px-3 py-1.5 bg-gold/20 text-gold rounded text-sm border border-gold/30">
+              保存配置
+            </button>
+            <button type="button" onClick={triggerScrape} disabled={scraping}
+              className="px-3 py-1.5 bg-gold text-surface rounded text-sm disabled:opacity-50">
+              {scraping ? "采集中…" : "🧪 立即采集"}
+            </button>
+          </div>
+        </div>
+      </section>
 
+      {/* 手动录入 */}
+      <section className="rounded-lg border border-surface-border bg-surface-card p-5 mb-6">
+        <h2 className="text-lg text-gold font-bold mb-3">{editId ? "✏️ 修改开奖" : "📝 手动录入"}</h2>
+        <p className="text-xs text-text-muted mb-4">期号格式如 2026-057。</p>
         <div className="flex flex-wrap items-end gap-3 p-3 bg-surface/50 rounded">
           <div>
             <p className="text-xs text-text-muted mb-1">期号</p>
-            <input type="text" value={formId} onChange={(e) => setFormId(e.target.value)}
-              placeholder=""
+            <input type="text" value={formId} onChange={(e) => setFormId(e.target.value)} placeholder=""
               className="rounded border border-surface-border bg-surface px-2 py-1.5 text-sm text-text w-20 text-center" />
           </div>
           <div>
@@ -192,19 +232,6 @@ export default function HkDrawsAdmin() {
         </div>
       </section>
 
-      {/* 自动采集 */}
-      <section className="rounded-lg border border-surface-border bg-surface-card p-5 mb-6">
-        <h2 className="text-lg text-gold font-bold mb-3">🔗 自动采集</h2>
-        <p className="text-xs text-text-muted mb-3">
-          从配置的采集源自动抓取开奖号码。采集源 URL 在「系统设置」中配置。
-          <br />定时采集：每周二/四/六 21:35（北京时间）。
-        </p>
-        <button type="button" onClick={triggerScrape} disabled={scraping}
-          className="px-4 py-2 bg-gold/20 text-gold rounded text-sm border border-gold/30 hover:bg-gold/30 disabled:opacity-50">
-          {scraping ? "采集中…" : "🧪 手动采集"}
-        </button>
-      </section>
-
       {/* 开奖记录 */}
       <section className="rounded-lg border border-surface-border bg-surface-card p-5">
         <div className="flex items-center justify-between mb-3">
@@ -217,8 +244,7 @@ export default function HkDrawsAdmin() {
                   method: "POST", headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ action: "clear_all" }),
                 });
-                setDraws([]);
-                setSelected(new Set());
+                setDraws([]); setSelected(new Set());
                 setToast("已清空所有开奖记录");
               }}
                 className="px-2 py-1 bg-red-900/40 text-red-300 rounded text-xs">清空全部</button>
@@ -232,15 +258,13 @@ export default function HkDrawsAdmin() {
             )}
           </div>
         </div>
-
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {sorted.map((d) => (
             <div key={d.id}
               className={`flex items-center gap-2 p-2 rounded text-sm cursor-pointer hover:bg-surface/50 transition-colors ${
                 editId === d.id ? "ring-1 ring-gold/40 bg-surface/50" : "bg-surface/20"
               }`}
-              onClick={() => fillForm(d)}
-            >
+              onClick={() => fillForm(d)}>
               <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleSelect(d.id)}
                 onClick={(e) => e.stopPropagation()} className="accent-gold shrink-0" />
               <span className="text-gold font-medium w-28 shrink-0">{d.id}</span>
@@ -259,7 +283,7 @@ export default function HkDrawsAdmin() {
             </div>
           ))}
           {sorted.length === 0 && (
-            <p className="text-text-muted text-sm text-center py-4">暂无数据，请手动录入</p>
+            <p className="text-text-muted text-sm text-center py-4">暂无数据</p>
           )}
         </div>
       </section>
