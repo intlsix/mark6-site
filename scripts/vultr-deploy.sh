@@ -272,6 +272,20 @@ chmod +x /opt/fetch_hk_draws.py
 log "香港开奖采集 cron 已安装（周二/四/六 21:35 北京）"
 
 # ============================================================
+# 数据备份 cron — 每小时 git push 数据文件
+# ============================================================
+cat > /opt/backup-data.sh << 'BACKUP'
+#!/bin/bash
+cd /opt/site
+git add src/data/hongkong/draws.json src/data/international/draws.json src/data/international/scheduled-draws.json src/data/international/schedule-settings.json src/data/admin/settings.json 2>/dev/null
+if git diff --cached --quiet; then exit 0; fi
+git commit -m "data: auto-backup $(date +%Y-%m-%d_%H:%M)" && git push origin main
+BACKUP
+chmod +x /opt/backup-data.sh
+(crontab -l 2>/dev/null | grep -v 'backup-data.sh'; echo '0 * * * * /opt/backup-data.sh >> /var/log/backup-data.log 2>&1') | crontab -
+log "数据备份 cron 已安装（每小时）"
+
+# ============================================================
 # 10. 部署验证（防坑——今晚踩过的全在这）
 # ============================================================
 echo -e "\n${YELLOW}[10/10] 部署验证...${NC}"
