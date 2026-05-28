@@ -4,7 +4,7 @@ import { readJson, writeJson } from "@/lib/storage/json-store";
 const KEY = "hongkong/draws.json";
 
 function sortDraws(draws: DrawRecord[]): DrawRecord[] {
-  return [...draws].sort((a, b) => b.drawAt.localeCompare(a.drawAt));
+  return [...draws].sort((a, b) => b.id.localeCompare(a.id));
 }
 
 export async function getHongKongDraws(): Promise<DrawRecord[]> {

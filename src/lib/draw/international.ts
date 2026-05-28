@@ -18,7 +18,7 @@ async function writeManual(draws: DrawRecord[]): Promise<boolean> {
 }
 
 function sortDraws(draws: DrawRecord[]): DrawRecord[] {
-  return [...draws].sort((a, b) => b.drawAt.localeCompare(a.drawAt));
+  return [...draws].sort((a, b) => b.id.localeCompare(a.id));
 }
 
 export async function getInternationalDraws(): Promise<DrawRecord[]> {
