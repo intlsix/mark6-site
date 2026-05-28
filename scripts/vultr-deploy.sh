@@ -191,83 +191,79 @@ echo -e "\n${YELLOW}[+] 安装香港开奖采集 cron...${NC}"
 
 cat > /opt/fetch_hk_draws.py << 'HKFETCH'
 #!/usr/bin/env python3
-"""香港开奖数据采集脚本 — 从 tbjl.sxhwqc.com 抓取最新开奖"""
-import json, re, sys, urllib.request, os
+"""香港开奖数据采集 — 从 settings.json 读取采集源 URL"""
+import json, re, sys, urllib.request, os, ssl
 from datetime import datetime
 
-HK_URL = "https://tbjl.sxhwqc.com:2025/hk.html"
+SETTINGS_PATH = "/opt/site/src/data/admin/settings.json"
 DRAWS_FILE = "/opt/site/src/data/hongkong/draws.json"
 
-def fetch():
-    req = urllib.request.Request(HK_URL, headers={"User-Agent": "Mozilla/5.0"})
+def get_scrape_url():
+    """Read hkScrapeUrl from settings.json"""
     try:
-        # Ignore SSL cert issues for this specific domain
-        ctx = __import__('ssl')._create_unverified_context()
+        with open(SETTINGS_PATH) as f:
+            settings = json.load(f)
+        return settings.get("hkScrapeUrl", "")
+    except:
+        return ""
+
+def fetch(url):
+    ctx = ssl._create_unverified_context()
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
         with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
-            html = resp.read().decode("gb18030", errors="replace")
+            return resp.read().decode("gb18030", errors="replace")
     except Exception as e:
         print(f"FETCH FAIL: {e}")
         return None
-    return html
 
 def parse(html):
-    """Extract draw numbers from HTML.
-    Format expected: issue numbers in a table/div structure.
-    This is a best-effort parser; adjust regex based on actual HTML structure.
-    """
+    """Extract draw numbers from HTML"""
     results = []
-    # Try to find issue numbers (YYYY-NNN format)
     issue_matches = re.findall(r'(\d{4}-\d{3})', html)
-    # Try to find numbers (1-49)
-    num_matches = re.findall(r'\b([1-9]|[1-4]\d|49)\b', html)
-    
-    # Simple approach: group numbers in sets of 7 (6 regular + 1 special)
-    # after each issue ID encountered
-    nums = [int(x) for x in num_matches]
+    all_nums = [int(x) for x in re.findall(r'\b([1-9]|[1-4]\d|49)\b', html)]
+
     for i, issue_id in enumerate(issue_matches):
         start = i * 7
-        if start + 7 <= len(nums):
-            numbers = nums[start:start+6]
-            special = nums[start+6]
+        if start + 7 <= len(all_nums):
             results.append({
                 "id": issue_id,
-                "drawAt": f"{issue_id[:4]}-01-01",  # placeholder, admin fills real date
-                "numbers": numbers,
-                "special": special,
+                "drawAt": f"{issue_id[:4]}-01-01",
+                "numbers": all_nums[start:start+6],
+                "special": all_nums[start+6],
                 "source": "auto"
             })
     return results
 
 def save(draws):
     os.makedirs(os.path.dirname(DRAWS_FILE), exist_ok=True)
-    
-    # Read existing
     existing = []
     if os.path.exists(DRAWS_FILE):
         with open(DRAWS_FILE) as f:
             existing = json.load(f)
-    
-    # Merge: don't duplicate
     existing_ids = {d["id"] for d in existing}
-    new_added = 0
+    added = 0
     for d in draws:
         if d["id"] not in existing_ids:
             existing.append(d)
-            new_added += 1
-    
-    if new_added:
+            added += 1
+    if added:
+        existing.sort(key=lambda d: d["id"], reverse=True)
         with open(DRAWS_FILE, "w") as f:
             json.dump(existing, f, indent=2, ensure_ascii=False)
-    
-    return new_added
+    return added
 
 if __name__ == "__main__":
-    html = fetch()
+    url = get_scrape_url()
+    if not url:
+        print("未配置采集源 URL（后台 → 系统设置 → 香港开奖采集）")
+        sys.exit(1)
+    html = fetch(url)
     if not html:
         sys.exit(1)
     draws = parse(html)
     added = save(draws)
-    print(f"{datetime.now().isoformat()}: {added} new draws saved")
+    print(f"{datetime.now().isoformat()}: {added} new draws saved (source: {url})")
 HKFETCH
 
 chmod +x /opt/fetch_hk_draws.py

@@ -32,6 +32,7 @@ export interface SiteSettings {
   contactEmail: string;
   autoBackupEnabled: boolean;
   hkScrapeEnabled: boolean;
+  hkScrapeUrl: string;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -43,6 +44,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   contactEmail: "support@example.com",
   autoBackupEnabled: true,
   hkScrapeEnabled: false,
+  hkScrapeUrl: "https://tbjl.sxhwqc.com:2025/hk.html",
 };
 
 export async function getSettings(): Promise<SiteSettings> {

@@ -84,9 +84,16 @@ export default function IntlDrawsAdmin() {
     const next = [...formNums]; next[i] = n; setFormNums(next);
   }
 
-  // --- CRUD ---
+  // --- CRUD (auto-save on every change) ---
 
-  function upsertRow() {
+  async function persist(newDraws: ScheduledDraw[]) {
+    await adminJson("/api/admin/intl-draws/scheduled", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save_draws", draws: newDraws }),
+    });
+  }
+
+  async function upsertRow() {
     // 日期留空：基于已有预置的最后日期+1天
     let date = formDate;
     if (!date) {
@@ -99,7 +106,6 @@ export default function IntlDrawsAdmin() {
         const day = String(d.getDate()).padStart(2, "0");
         date = `${y}-${m}-${day}`;
       } else {
-        // 一条预置都没有，用今天
         const d = new Date();
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -114,26 +120,29 @@ export default function IntlDrawsAdmin() {
     }
     const entry: ScheduledDraw = { date, numbers: [...formNums], special: formSpecial };
 
-    setScheduled((prev) => {
-      const next = [...prev];
-      if (editIdx !== null && editIdx < next.length) {
-        next[editIdx] = entry;
-      } else {
-        next.push(entry);
-      }
-      return next;
-    });
-
+    let newDraws: ScheduledDraw[];
+    if (editIdx !== null) {
+      newDraws = [...scheduled];
+      newDraws[editIdx] = entry;
+    } else {
+      newDraws = [...scheduled, entry];
+    }
+    setScheduled(newDraws);
     resetForm();
-    setToast(date ? `已${editIdx !== null ? "修改" : "添加"} ${date}` : "");
+
+    await persist(newDraws);
+    setToast(date ? `已${editIdx !== null ? "修改" : "添加"} ${date}（自动保存）` : "");
   }
 
-  function removeSelected() {
+  async function removeSelected() {
     if (selected.size === 0) { setToast("请先勾选要删除的项"); return; }
-    setScheduled((prev) => prev.filter((_, i) => !selected.has(i)));
+    const newDraws = scheduled.filter((_, i) => !selected.has(i));
+    setScheduled(newDraws);
     setSelected(new Set());
     if (editIdx !== null && selected.has(editIdx)) resetForm();
-    setToast(`已删除 ${selected.size} 项`);
+
+    await persist(newDraws);
+    setToast(`已删除 ${selected.size} 项（自动保存）`);
   }
 
   function toggleSelect(idx: number) {
@@ -146,14 +155,6 @@ export default function IntlDrawsAdmin() {
 
   function toggleSelectAll() {
     setSelected((prev) => prev.size === scheduled.length ? new Set() : new Set(scheduled.keys()));
-  }
-
-  async function saveScheduled() {
-    await adminJson("/api/admin/intl-draws/scheduled", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "save_draws", draws: scheduled }),
-    });
-    setToast("预置开奖已保存");
   }
 
   const allSelected = scheduled.length > 0 && selected.size === scheduled.length;
@@ -265,8 +266,7 @@ export default function IntlDrawsAdmin() {
         )}
 
         {scheduled.length > 0 && (
-          <button type="button" onClick={saveScheduled}
-            className="mt-3 px-4 py-2 bg-gold text-surface rounded text-sm font-medium">💾 保存预置</button>
+          <p className="mt-3 text-xs text-text-muted/50">每次添加/修改/删除自动保存</p>
         )}
       </section>
 
