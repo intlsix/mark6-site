@@ -4,6 +4,8 @@ import { getHongKongDraws } from "@/lib/draw/hongkong";
 import { getSeoForPath } from "@/lib/admin/seo";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   try {

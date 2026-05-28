@@ -3,6 +3,8 @@ import IntlCardLive from "@/components/home/IntlCardLive";
 import HkCardLive from "@/components/home/HkCardLive";
 import { Link } from "@/i18n/navigation";
 import { getHongKongDraws } from "@/lib/draw/hongkong";
+
+export const dynamic = "force-dynamic";
 import { getInternationalDraws } from "@/lib/draw/international";
 import { getPublishedByCategory } from "@/lib/admin/articles";
 import { generatePageMetadata } from "@/lib/admin/metadata";
