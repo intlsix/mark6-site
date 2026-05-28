@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { getHongKongDraws } from "@/lib/draw/hongkong";
 import { getInternationalDraws } from "@/lib/draw/international";
 import { getPublishedByCategory } from "@/lib/admin/articles";
-import { getSeoForPath } from "@/lib/admin/seo";
+import { generatePageMetadata } from "@/lib/admin/metadata";
 import type { KnowledgeArticle } from "@/lib/mark6/types";
 import type { Metadata } from "next";
 
@@ -50,11 +50,7 @@ function HomeArticleSection({
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  try {
-    return await getSeoForPath("/", locale);
-  } catch {
-    return { title: "Hong Kong International Mark Six", description: "Hong Kong Draw · International Draw" };
-  }
+  return generatePageMetadata("/", locale);
 }
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {

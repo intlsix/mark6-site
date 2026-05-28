@@ -5,6 +5,7 @@ import { routing } from "@/i18n/routing";
 import Header from "@/components/layout/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import LegalNotice from "@/components/layout/LegalNotice";
+import { OrganizationSchema, WebSiteSchema } from "@/components/seo/JsonLd";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -24,6 +25,10 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale}>
+      <head>
+        <OrganizationSchema />
+        <WebSiteSchema />
+      </head>
       <body className="min-h-screen flex flex-col">
         <NextIntlClientProvider messages={messages}>
           <Header />

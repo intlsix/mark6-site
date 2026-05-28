@@ -1,41 +1,67 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
+import { getSeoEntries } from "@/lib/admin/seo";
+import { getPublishedArticles } from "@/lib/admin/articles";
+import { getHongKongDraws } from "@/lib/draw/hongkong";
+import { getInternationalDraws } from "@/lib/draw/international";
 
-const BASE = "https://hkim6.com";
+const BASE_URL = "https://intlsix.com";
 
-const staticRoutes = [
-  "",
-  "/rules",
-  "/rules/hongkong",
-  "/rules/international",
-  "/glossary",
-  "/zodiac",
-  "/zodiac/lookup",
-  "/trends",
-  "/analysis",
-  "/analysis/idiom",
-  "/analysis/idiom/learn",
-  "/analysis/codes",
-  "/analysis/codes/learn",
-  "/knowledge",
-  "/faq",
-  "/about",
-  "/results/hongkong",
-  "/results/international",
-];
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const entries: MetadataRoute.Sitemap = [];
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const urls: MetadataRoute.Sitemap = [];
-
-  for (const locale of ["zh", "en"]) {
-    for (const route of staticRoutes) {
-      urls.push({
-        url: `${BASE}/${locale}${route}`,
+  // Static pages from SEO config (en + zh)
+  const seoEntries = await getSeoEntries();
+  for (const se of seoEntries) {
+    for (const locale of ["en", "zh"]) {
+      const urlPath = se.path === "/" ? "" : se.path;
+      entries.push({
+        url: `${BASE_URL}/${locale}${urlPath}`,
         lastModified: new Date(),
-        changeFrequency: route.startsWith("/results") ? "daily" : "weekly",
-        priority: route === "" ? 1.0 : route.startsWith("/knowledge") ? 0.8 : route.includes("learn") ? 0.7 : 0.6,
+        changeFrequency: se.path === "/" ? "daily" : "weekly",
+        priority: se.path === "/" ? 1.0 : 0.8,
       });
     }
   }
 
-  return urls;
+  // Knowledge base articles
+  const articles = await getPublishedArticles();
+  for (const a of articles) {
+    const cat = a.category === "news" ? "news" : "knowledge";
+    for (const locale of ["en", "zh"]) {
+      entries.push({
+        url: `${BASE_URL}/${locale}/${cat}/${a.id}`,
+        lastModified: new Date(a.updatedAt),
+        changeFrequency: "weekly",
+        priority: 0.6,
+      });
+    }
+  }
+
+  // HK draw detail pages (latest 30)
+  const hkDraws = await getHongKongDraws();
+  for (const d of hkDraws.slice(0, 30)) {
+    for (const locale of ["en", "zh"]) {
+      entries.push({
+        url: `${BASE_URL}/${locale}/results/hongkong/${d.id}`,
+        lastModified: new Date(d.drawAt),
+        changeFrequency: "monthly",
+        priority: 0.5,
+      });
+    }
+  }
+
+  // International draw detail pages (latest 30)
+  const intlDraws = await getInternationalDraws();
+  for (const d of intlDraws.slice(0, 30)) {
+    for (const locale of ["en", "zh"]) {
+      entries.push({
+        url: `${BASE_URL}/${locale}/results/international/${d.id}`,
+        lastModified: new Date(d.drawAt),
+        changeFrequency: "monthly",
+        priority: 0.5,
+      });
+    }
+  }
+
+  return entries;
 }
