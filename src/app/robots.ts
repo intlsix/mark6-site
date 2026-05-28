@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin/", "/api/"],
       },
     ],
-    sitemap: "https://hkim6.com/sitemap.xml",
+    sitemap: "https://intlsix.com/sitemap.xml",
   };
 }

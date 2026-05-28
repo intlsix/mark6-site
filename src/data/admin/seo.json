@@ -47,5 +47,61 @@
     "titleEn": "Mark Six Knowledge Base",
     "descZh": "六合彩历史、文化、生肖、波色、玩法知识大全",
     "descEn": "Mark Six history, culture, zodiac, wave colors, and gameplay guides"
+  },
+  {
+    "path": "/news",
+    "titleZh": "六合彩新闻",
+    "titleEn": "Mark Six News",
+    "descZh": "最新六合彩资讯——开奖快报、趋势分析、金多宝安排",
+    "descEn": "Latest Mark Six news — draw reports, trend analysis, snowball announcements"
+  },
+  {
+    "path": "/zodiac/lookup",
+    "titleZh": "生肖查询 - 号码查运势",
+    "titleEn": "Zodiac Lookup - Number to Fortune",
+    "descZh": "输入1-49号码查询岁数法生肖、太岁关系及流年运势",
+    "descEn": "Enter a number (1-49) to find its zodiac, Tai Sui relationships, and yearly fortune"
+  },
+  {
+    "path": "/rules/hongkong",
+    "titleZh": "香港开奖规则 - 标准玩法",
+    "titleEn": "Hong Kong Draw Rules",
+    "descZh": "香港六合彩标准赛程与玩法规则，选号范围、开奖周期、玩法一览",
+    "descEn": "HK Mark Six standard schedule and rules — number range, draw cycle, bet types"
+  },
+  {
+    "path": "/rules/international",
+    "titleZh": "国际开奖规则 - 民间玩法",
+    "titleEn": "International Draw Rules",
+    "descZh": "国际自营开奖规则，民间特色玩法、法律公平保障、种子验证机制",
+    "descEn": "International self-operated draw rules, folk bet types, fairness verification"
+  },
+  {
+    "path": "/analysis",
+    "titleZh": "分析工具 - 红字解码与暗码冲合",
+    "titleEn": "Analysis Tools - Red Codes & Dark Codes",
+    "descZh": "六合彩专业分析工具：红字解码推测生肖，暗码冲合加权评分",
+    "descEn": "Professional Mark Six analysis: red character decoding and dark code scoring"
+  },
+  {
+    "path": "/glossary",
+    "titleZh": "六合彩术语词典",
+    "titleEn": "Mark Six Glossary",
+    "descZh": "六合彩核心术语中英对照词典，新人入门必读",
+    "descEn": "Bilingual Mark Six terminology reference for beginners"
+  },
+  {
+    "path": "/faq",
+    "titleZh": "六合彩常见问题",
+    "titleEn": "Mark Six FAQ",
+    "descZh": "岁数法与固定生肖的区别、暗码算法、国际开奖可信度等常见问题解答",
+    "descEn": "Age Method vs fixed zodiac, dark code math, international draw trustworthiness — answered"
+  },
+  {
+    "path": "/about",
+    "titleZh": "关于香港国际六合彩",
+    "titleEn": "About Hong Kong International Mark Six",
+    "descZh": "双轨开奖、专业分析、可验证公平——面向全球华人的六合彩资讯门户",
+    "descEn": "Dual-track draws, expert analysis, verifiable fairness — a Mark Six portal for global Chinese communities"
   }
 ]
