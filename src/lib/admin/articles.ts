@@ -9,7 +9,9 @@ export async function getArticles(): Promise<KnowledgeArticle[]> {
 
 export async function getPublishedArticles(): Promise<KnowledgeArticle[]> {
   const articles = await getArticles();
-  return articles.filter((a) => a.published);
+  return articles
+    .filter((a) => a.published)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 export async function getPublishedByCategory(
