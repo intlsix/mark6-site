@@ -4,6 +4,8 @@ import { getPublishedArticles } from "@/lib/admin/articles";
 import { getSeoForPath } from "@/lib/admin/seo";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return await getSeoForPath("/knowledge", locale);
@@ -13,7 +15,7 @@ export default async function KnowledgePage({ params }: { params: Promise<{ loca
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("knowledge");
-  const articles = (await getPublishedArticles()).filter((a) => a.category !== "news");
+  const articles = await getPublishedArticles();
 
   return (
     <div>
