@@ -24,7 +24,7 @@ export default async function KnowledgePage({
   const sp = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("knowledge");
-  const allArticles = await getPublishedArticles();
+  const allArticles = (await getPublishedArticles()).filter((a) => a.category !== "news");
 
   const totalPages = Math.ceil(allArticles.length / PER_PAGE);
   const showAll = sp.page === "all";
