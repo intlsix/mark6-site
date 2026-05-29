@@ -6,7 +6,7 @@ const intlMiddleware = createMiddleware(routing);
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/admin") || pathname.startsWith("/api")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api") || pathname.startsWith("/j8x2k5m")) {
     return NextResponse.next();
   }
   const response = intlMiddleware(request);
