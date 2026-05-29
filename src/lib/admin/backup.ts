@@ -33,6 +33,7 @@ export interface SiteSettings {
   autoBackupEnabled: boolean;
   hkScrapeEnabled: boolean;
   hkScrapeUrl: string;
+  quickSubmitCode: string;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -45,6 +46,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   autoBackupEnabled: true,
   hkScrapeEnabled: false,
   hkScrapeUrl: "https://tbjl.sxhwqc.com:2025/hk.html",
+  quickSubmitCode: "729184",
 };
 
 export async function getSettings(): Promise<SiteSettings> {
