@@ -7,6 +7,7 @@ import { adminFetch, startAdminSession, stopAdminSession } from "@/lib/admin/adm
 
 const NAV = [
   { href: "/admin/dashboard", label: "控制台" },
+  { href: "/admin/analytics", label: "流量统计" },
   { href: "/admin/draws/hongkong", label: "香港开奖" },
   { href: "/admin/draws/international", label: "国际开奖" },
   { href: "/admin/draws/import", label: "批量导入" },

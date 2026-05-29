@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { adminFetch } from "@/lib/admin/admin-fetch";
 
 interface AnalyticsSummary {
   totalViews: number;
@@ -18,7 +19,7 @@ export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/analytics/track")
+    adminFetch("/api/analytics/track")
       .then((r) => r.json())
       .then((d) => {
         setData(d);
