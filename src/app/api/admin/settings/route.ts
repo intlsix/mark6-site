@@ -16,3 +16,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   });
 }
+
+export async function PATCH(req: NextRequest) {
+  return withAdminAuth(req, async (user) => {
+    const current = await getSettings();
+    const patch = (await req.json()) as Partial<SiteSettings>;
+    const merged = { ...current, ...patch };
+    const ok = await saveSettings(merged);
+    if (!ok) return NextResponse.json({ error: "写入失败" }, { status: 503 });
+    await appendLog("settings", `${user.username} 更新设置`);
+    return NextResponse.json({ ok: true });
+  });
+}

@@ -34,6 +34,7 @@ export interface SiteSettings {
   hkScrapeEnabled: boolean;
   hkScrapeUrl: string;
   quickSubmitCode: string;
+  googleVerification: string;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
