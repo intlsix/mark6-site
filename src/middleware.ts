@@ -7,7 +7,9 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith("/admin") || pathname.startsWith("/api") || pathname.startsWith("/j8x2k5m")) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set("x-is-j8x2k5m", "1");
+    return res;
   }
   const response = intlMiddleware(request);
   // 所有页面 HTML 不缓存，保证每次构建后用户立即看到最新版本

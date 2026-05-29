@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,6 +15,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const heads = await headers();
+  if (heads.get("x-is-j8x2k5m") === "1") {
+    return (
+      <html lang="zh">
+        <body className="bg-black">{children}</body>
+      </html>
+    );
+  }
   return children;
 }
