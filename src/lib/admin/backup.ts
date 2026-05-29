@@ -48,6 +48,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   hkScrapeEnabled: false,
   hkScrapeUrl: "https://tbjl.sxhwqc.com:2025/hk.html",
   quickSubmitCode: "729184",
+  googleVerification: "",
 };
 
 export async function getSettings(): Promise<SiteSettings> {
