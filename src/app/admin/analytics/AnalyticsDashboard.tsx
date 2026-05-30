@@ -11,7 +11,8 @@ interface AnalyticsSummary {
   yearlyViews: { year: string; count: number }[];
   topCountries: { country: string; count: number; percentage: number }[];
   topPages: { path: string; count: number; percentage: number }[];
-  recentViews: { path: string; country: string; timestamp: string }[];
+  topSources: { source: string; count: number; percentage: number }[];
+  recentViews: { path: string; country: string; referrer: string; timestamp: string }[];
 }
 
 export default function AnalyticsDashboard() {
@@ -131,6 +132,29 @@ export default function AnalyticsDashboard() {
               )}
             </Panel>
 
+            {/* Traffic sources */}
+            <Panel title="流量来源">
+              {!data.topSources || data.topSources.length === 0 ? (
+                <p className="text-text-muted/50 text-sm py-8 text-center">上线后自动统计来源</p>
+              ) : (
+                <div className="space-y-2">
+                  {data.topSources.slice(0, 10).map((s) => {
+                    const maxS = Math.max(...data.topSources.map((x) => x.count), 1);
+                    return (
+                      <div key={s.source} className="flex items-center gap-2 text-sm">
+                        <span className="w-28 text-text-muted truncate">{s.source}</span>
+                        <div className="flex-1 bg-surface-border rounded-full h-3 overflow-hidden">
+                          <div className="bg-blue-400 h-full rounded-full" style={{ width: `${(s.count / maxS) * 100}%` }} />
+                        </div>
+                        <span className="w-12 text-right text-text-muted text-xs">{s.count}</span>
+                        <span className="w-12 text-right text-text-muted/50 text-xs">{s.percentage}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Panel>
+
             {/* Yearly */}
             <Panel title="年度总览">
               {data.yearlyViews.length === 0 ? (
@@ -153,13 +177,26 @@ export default function AnalyticsDashboard() {
                 <p className="text-text-muted/50 text-sm py-8 text-center">暂无访问记录</p>
               ) : (
                 <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {data.recentViews.map((v, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-text-muted py-0.5 border-b border-surface-border/30">
-                      <span className="text-text-muted/40 w-16">{v.timestamp.slice(11, 19)}</span>
-                      <span className="flex-1 truncate">{v.path}</span>
-                      <span className="w-16 text-right text-text-muted/50">{v.country}</span>
-                    </div>
-                  ))}
+                  {data.recentViews.map((v, i) => {
+                    const src = v.referrer
+                      ? (() => {
+                          const u = (v.referrer || "").toLowerCase();
+                          if (!u || u === "direct") return "直接";
+                          if (u.includes("google.")) return "Google";
+                          if (u.includes("bing.")) return "Bing";
+                          if (u.includes("baidu.")) return "百度";
+                          try { return new URL(v.referrer).hostname.replace("www.","").slice(0,18); } catch { return "外链"; }
+                        })()
+                      : "直接";
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-xs text-text-muted py-0.5 border-b border-surface-border/30">
+                        <span className="text-text-muted/40 w-16">{v.timestamp.slice(11, 19)}</span>
+                        <span className="flex-1 truncate">{v.path}</span>
+                        <span className="w-14 text-right text-text-muted/40 truncate" title={src}>{src}</span>
+                        <span className="w-12 text-right text-text-muted/50">{v.country}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </Panel>

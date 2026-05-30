@@ -22,7 +22,7 @@ async function resolveCountry(ip: string): Promise<string> {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { path, locale } = body;
+    const { path, locale, referrer } = body;
 
     // Try Cloudflare/Vercel headers first, then resolve by IP
     let country = req.headers.get("x-vercel-ip-country") ||
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
       path: path || "/",
       locale: locale || "zh",
       country,
+      referrer: referrer || "direct",
       timestamp: new Date().toISOString(),
     });
 

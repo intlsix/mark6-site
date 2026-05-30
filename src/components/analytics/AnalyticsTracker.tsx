@@ -11,7 +11,7 @@ export default function AnalyticsTracker() {
     fetch("/api/analytics/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path: pathname, locale }),
+      body: JSON.stringify({ path: pathname, locale, referrer: document.referrer || "direct" }),
     }).catch(() => {
       // Silent fail — analytics should never break the page
     });

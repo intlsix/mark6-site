@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>录入</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;color:#fff;font-family:-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.box{width:100%;max-width:320px}
+input{width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:14px;color:#fff;font-size:18px;text-align:center;outline:none;margin-bottom:10px}
+input:focus{border-color:#3b82f6}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.grid input{border-color:#444;margin-bottom:0}
+.special{border-color:#ca8a04!important;color:#facc15;width:80px;margin-bottom:10px}
+.btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer}
+.btn-primary{background:#2563eb;color:#fff}.btn-primary:disabled{opacity:0.4}
+.btn-success{background:#16a34a;color:#fff}.btn-success:disabled{opacity:0.4}
+.error{color:#f87171;text-align:center;margin-top:8px;font-size:14px}
+.ok{color:#4ade80;text-align:center;font-size:18px}
+.hint{color:#666;font-size:12px;text-align:center;margin-top:8px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div id="auth" class="box">
+  <input type="password" id="code" inputmode="numeric" placeholder="安全码" autofocus>
+  <button class="btn btn-primary" onclick="doAuth()">验证</button>
+  <p id="authErr" class="error hidden"></p>
+  <p class="hint">安全码验证后可录入开奖号码</p>
+</div>
+
+<div id="form" class="box hidden">
+  <input type="text" id="period" placeholder="期号 如 2026-057">
+  <div class="grid">
+    <input type="number" id="n1" min="1" max="49" placeholder="1">
+    <input type="number" id="n2" min="1" max="49" placeholder="2">
+    <input type="number" id="n3" min="1" max="49" placeholder="3">
+    <input type="number" id="n4" min="1" max="49" placeholder="4">
+    <input type="number" id="n5" min="1" max="49" placeholder="5">
+    <input type="number" id="n6" min="1" max="49" placeholder="6">
+  </div>
+  <input type="number" id="special" class="special" min="1" max="49" placeholder="特码">
+  <input type="date" id="date" value="">
+  <button class="btn btn-success" onclick="doSubmit()">确认录入</button>
+  <p id="formErr" class="error hidden"></p>
+</div>
+
+<div id="done" class="box hidden">
+  <p class="ok">提交成功 ✓</p>
+  <button class="btn btn-primary" style="margin-top:16px" onclick="reset()">再录一期</button>
+</div>
+
+<script>
+var token='';
+document.getElementById('date').value=new Date().toISOString().slice(0,10);
+document.getElementById('code').addEventListener('keydown',function(e){if(e.key==='Enter')doAuth()});
+
+async function doAuth(){
+  var code=document.getElementById('code').value.trim();
+  if(!code)return;
+  try{
+    var r=await fetch('/api/quick-submit/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code})});
+    if(!r.ok){throw new Error('wrong')}
+    token=(await r.json()).token;
+    document.getElementById('auth').classList.add('hidden');
+    document.getElementById('form').classList.remove('hidden');
+    document.getElementById('period').focus();
+  }catch(e){
+    document.getElementById('authErr').textContent='安全码错误';
+    document.getElementById('authErr').classList.remove('hidden');
+  }
+}
+
+async function doSubmit(){
+  var p=document.getElementById('period').value.trim();
+  var ns=[1,2,3,4,5,6].map(function(i){return Number(document.getElementById('n'+i).value)});
+  var s=Number(document.getElementById('special').value);
+  var d=document.getElementById('date').value||new Date().toISOString().slice(0,10);
+  if(!p||ns.some(function(n){return !n||n<1||n>49})||!s||s<1||s>49){
+    document.getElementById('formErr').textContent='号码1-49，不能重复';
+    document.getElementById('formErr').classList.remove('hidden');return;
+  }
+  if(new Set(ns.concat(s)).size!==7){
+    document.getElementById('formErr').textContent='号码重复';document.getElementById('formErr').classList.remove('hidden');return;
+  }
+  try{
+    var r=await fetch('/api/quick-submit/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:token,draw:{id:p,drawAt:d,numbers:ns,special:s}})});
+    var data=await r.json();
+    if(!r.ok){document.getElementById('formErr').textContent=data.error||'失败';document.getElementById('formErr').classList.remove('hidden');return;}
+    document.getElementById('form').classList.add('hidden');
+    document.getElementById('done').classList.remove('hidden');
+  }catch(e){
+    document.getElementById('formErr').textContent='网络错误';document.getElementById('formErr').classList.remove('hidden');
+  }
+}
+
+function reset(){
+  document.getElementById('form').classList.remove('hidden');
+  document.getElementById('done').classList.add('hidden');
+  document.getElementById('period').value='';
+  [1,2,3,4,5,6].forEach(function(i){document.getElementById('n'+i).value=''});
+  document.getElementById('special').value='';
+  document.getElementById('formErr').classList.add('hidden');
+  document.getElementById('period').focus();
+}
+</script>
+</body>
+</html>
