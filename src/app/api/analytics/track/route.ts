@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { trackPageView, getAnalyticsSummary } from "@/lib/admin/analytics";
+import { trackPageView, getAnalyticsSummary, isBot } from "@/lib/admin/analytics";
 import { getUserFromRequest } from "@/lib/admin/api-auth";
 
 async function resolveCountry(ip: string): Promise<string> {
@@ -24,6 +24,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { path, locale, referrer } = body;
 
+    // Filter bots
+    const ua = req.headers.get("user-agent");
+    if (isBot(ua)) {
+      return NextResponse.json({ ok: true, skipped: "bot" });
+    }
+
+    // Extract client IP
+    const clientIp = req.headers.get("x-real-ip") ||
+                     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+                     "Unknown";
+
     // Try Cloudflare/Vercel headers first, then resolve by IP
     let country = req.headers.get("x-vercel-ip-country") ||
                   req.headers.get("cf-ipcountry") ||
@@ -31,10 +42,7 @@ export async function POST(req: NextRequest) {
                   null;
 
     if (!country) {
-      const ip = req.headers.get("x-real-ip") ||
-                 req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-                 "Unknown";
-      country = await resolveCountry(ip);
+      country = await resolveCountry(clientIp);
     }
 
     trackPageView({
@@ -42,6 +50,7 @@ export async function POST(req: NextRequest) {
       locale: locale || "zh",
       country,
       referrer: referrer || "direct",
+      ip: clientIp,
       timestamp: new Date().toISOString(),
     });
 

@@ -7,7 +7,22 @@ export interface PageView {
   locale: string;
   country: string;
   referrer: string;
+  ip: string;
   timestamp: string;
+}
+
+/** Known bot User-Agent patterns to exclude from analytics */
+const BOT_PATTERNS = [
+  "googlebot", "bingbot", "slurp", "duckduckbot", "baiduspider",
+  "yandexbot", "facebot", "twitterbot", "whatsapp", "telegrambot",
+  "discordbot", "ahrefsbot", "semrushbot", "mj12bot", "dotbot",
+  "petalbot", "bytespider", "crawler", "spider", "bot/",
+];
+
+export function isBot(userAgent: string | null): boolean {
+  if (!userAgent) return false;
+  const ua = userAgent.toLowerCase();
+  return BOT_PATTERNS.some((p) => ua.includes(p));
 }
 
 /** Classify raw referrer into a human-readable source label */

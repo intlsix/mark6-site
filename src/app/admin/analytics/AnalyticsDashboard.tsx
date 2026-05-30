@@ -12,7 +12,7 @@ interface AnalyticsSummary {
   topCountries: { country: string; count: number; percentage: number }[];
   topPages: { path: string; count: number; percentage: number }[];
   topSources: { source: string; count: number; percentage: number }[];
-  recentViews: { path: string; country: string; referrer: string; timestamp: string }[];
+  recentViews: { path: string; country: string; ip: string; referrer: string; timestamp: string }[];
 }
 
 export default function AnalyticsDashboard() {
@@ -194,6 +194,7 @@ export default function AnalyticsDashboard() {
                         <span className="flex-1 truncate">{v.path}</span>
                         <span className="w-14 text-right text-text-muted/40 truncate" title={src}>{src}</span>
                         <span className="w-12 text-right text-text-muted/50">{v.country}</span>
+                        <span className="w-28 text-right text-text-muted/30 font-mono text-[10px] truncate" title={v.ip || "-"}>{v.ip || "-"}</span>
                       </div>
                     );
                   })}
